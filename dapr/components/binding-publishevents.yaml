@@ -10,3 +10,5 @@ spec:
     value: "30 * * * * *"
   - name: direction
     value: "input"
+  - name: route
+    value: /api/platform/publish-events

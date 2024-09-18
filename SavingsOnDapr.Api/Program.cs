@@ -59,8 +59,6 @@ var app = builder.Build();
 app.UseCloudEvents();
 app.UseSwagger();
 app.UseSwaggerUI();
-
-app.MapGet("/", () => Results.LocalRedirect("~/swagger"));
 app.MapCarter();
 
 app.MapSubscribeHandler();

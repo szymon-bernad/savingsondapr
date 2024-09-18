@@ -12,13 +12,13 @@ public class SavingsModule : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("/v1/savings-account/{refid}", async (string refid, IStateEntryRepository<InstantAccessSavingsAccountState> repo) =>
+        app.MapGet("/api/savings/savings-account/{refid}", async (string refid, IStateEntryRepository<InstantAccessSavingsAccountState> repo) =>
         {
             var result = await repo.QueryAccountsByKeyAsync(new string[] { "data.externalRef" }, new string[] { refid });
             return Results.Ok(result);
-        });
+        }).WithTags(["savings"]);
 
-        app.MapPost("/v1/savings-accounts",
+        app.MapPost("/api/savings/savings-accounts",
             async (IEventPublishingService publishingService,
                     IStateEntryRepository<InstantAccessSavingsAccountState> repo,
                    CreateSavingsAccount request) =>
@@ -32,10 +32,10 @@ public class SavingsModule : ICarterModule
 
                 await publishingService.PublishCommand(new CreateInstantSavingsAccountCommand(request.ExternalRef, request.InterestRate, request.PlatformId));
 
-                return Results.Accepted($"/v1/savings-account/{request.ExternalRef}");
-            });
+                return Results.Accepted($"/api/savings/savings-account/{request.ExternalRef}");
+            }).WithTags(["savings"]);
 
-        app.MapPost("/v1/savings-account/:credit",
+        app.MapPost("/api/savings/savings-account/:credit",
             async (IEventPublishingService publishingService,
                     CreditAccount request) =>
             {
@@ -43,10 +43,10 @@ public class SavingsModule : ICarterModule
                 await publishingService.PublishCommand(
                     new CreditAccountCommand(cmdId, request.ExternalRef, request.Amount, DateTime.UtcNow, request.TransferRef));
 
-                return Results.Accepted($"/v1/savings-account/command/{cmdId}");
-            });
+                return Results.Accepted($"/api/savings/savings-account/command/{cmdId}");
+            }).WithTags(["savings"]);
 
-        app.MapPost("/v1/savings-account/:debit",
+        app.MapPost("/api/savings/savings-account/:debit",
             async (IEventPublishingService publishingService,
                     DebitAccount request) =>
             {
@@ -55,6 +55,6 @@ public class SavingsModule : ICarterModule
                     new DebitAccountCommand(cmdId, request.ExternalRef, request.Amount, DateTime.UtcNow, request.TransferRef));
 
                 return Results.Accepted($"/v1/savings-account/command/{cmdId}");
-            });
+            }).WithTags(["savings"]);
     }
 }

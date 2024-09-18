@@ -14,13 +14,13 @@ public class PlatformModule : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapPost("v1/accounts/:handle-iasaactivated-event",
+        app.MapPost("/api/platform/accounts/:handle-iasaactivated-event",
             [Topic("pubsub", "instantaccesssavingsaccountactivated")] (InstantAccessSavingsAccountActivated @event, ILogger<PlatformModule> logger) =>
             {
                 logger.LogInformation("Received IASA activated event: {accountId}", @event.AccountId);
-            });
+            }).WithTags(["platform"]);
 
-        app.MapPost("/v1/commands",
+        app.MapPost("/api/platform/commands",
                     [Topic("pubsub", "commands")] async (PubSubCommand evt, IMediator mediator, ILogger<PlatformModule> logger) =>
                     {
                         try
@@ -38,9 +38,9 @@ public class PlatformModule : ICarterModule
                             logger.LogError($"Error processing command: {ex.Message}");
                             throw;
                         }
-                    });
+                    }).WithTags(["platform"]);
 
-        app.MapPost("/publish-events",
+        app.MapPost("/api/platform/publish-events",
             async (
                    IStateEntryRepository<InstantAccessSavingsAccountState> iasaRepository,
                    IMediator mediator
@@ -54,12 +54,12 @@ public class PlatformModule : ICarterModule
                                 ));
 
             return Results.Ok();
-        });
+        }).WithTags(["platform"]);
 
-        app.MapMethods("/publish-events", ["OPTIONS"],
-            () => Task.FromResult(Results.Accepted()));
+        app.MapMethods("/api/platform/publish-events", ["OPTIONS"],
+            () => Task.FromResult(Results.Accepted())).WithTags(["platform"]);
 
-        app.MapGet("/v1/savings-account/command/{msgid}", async (string msgid, IStateEntryRepository<InstantAccessSavingsAccountState> repo) =>
+        app.MapGet("/api/platform/savings-account/command/{msgid}", async (string msgid, IStateEntryRepository<InstantAccessSavingsAccountState> repo) =>
         {
             var result = (await repo.IsMessageProcessed(msgid));
 
@@ -71,7 +71,7 @@ public class PlatformModule : ICarterModule
             {
                 return Results.NotFound();
             }
-        });
+        }).WithTags(["platform"]);
 
     }
 }

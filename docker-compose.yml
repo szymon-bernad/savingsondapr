@@ -8,6 +8,12 @@ services:
   
   rabbitmq:
     image: rabbitmq:3.13.7-management-alpine
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
     ports:
     - "5672:5672"       # AMQP protocol port
     - "15672:15672"  # management plugin port"
@@ -29,10 +35,13 @@ services:
     depends_on:
       - postgres
       - placement
-      - rabbitmq 
 
   savingsondapr.api-dapr:
     image: "daprio/daprd:1.14.2"
     network_mode: "service:savingsondapr.api"
     depends_on:
-      - savingsondapr.api
+      savingsondapr.api:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+

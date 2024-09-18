@@ -22,7 +22,7 @@ public static class SavingsPlatformAccountsDIExt
         services.AddScoped<IStateEntryRepository<InstantAccessSavingsAccountState>, InstantAccessSavingsAccountRepository>();
         services.AddTransient<IAggregateRootFactory<InstantAccessSavingsAccount, InstantAccessSavingsAccountState>, InstantAccessSavingsAccountFactory>();
         services.AddTransient<IEventPublishingService, DaprEventPublishingService>();
-        services.AddTransient<IThreadSynchronizer, ThreadSynchronizer>();
+        services.AddSingleton<IThreadSynchronizer, ThreadSynchronizer>();
 
         return services;
     }

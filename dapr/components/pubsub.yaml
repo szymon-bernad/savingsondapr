@@ -6,7 +6,6 @@ metadata:
 spec:
   type: pubsub.rabbitmq
   version: v1
-  initTimeout: "90s"
   metadata:
   - name: host
     value: "amqp://rabbitmq:5672"

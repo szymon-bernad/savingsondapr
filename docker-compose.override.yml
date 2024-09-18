@@ -13,7 +13,7 @@ services:
 
   savingsondapr.api-dapr:
     command: ["./daprd",
-      "--app-id", "dapr-savings-acc",
+      "--app-id", "dapr-savings-api",
       "--app-port", "80",
       "--dapr-http-port", "3605",
       "--placement-host-address", "placement:50000",

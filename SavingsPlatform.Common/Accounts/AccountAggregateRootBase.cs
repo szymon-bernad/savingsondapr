@@ -67,7 +67,7 @@ namespace SavingsPlatform.Common.Accounts
             }
         }
 
-        protected void ValidateForDebit(decimal amount)
+        protected void ValidateForDebit(decimal amount, decimal totalBalance)
         {
             if (_state is null)
             {
@@ -80,7 +80,7 @@ namespace SavingsPlatform.Common.Accounts
                 throw new InvalidOperationException($"Debiy transaction amount must be greater than 0.00");
             }
 
-            if (_state.TotalBalance < amount)
+            if (totalBalance < amount)
             {
                 _logger?.LogError($"{nameof(ValidateForDebit)}: Account with {nameof(_state.Key)} = {_state.Key} has insufficient funds.");
                 throw new InvalidOperationException(

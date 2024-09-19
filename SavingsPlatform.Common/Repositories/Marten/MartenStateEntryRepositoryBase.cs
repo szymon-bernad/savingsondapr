@@ -51,7 +51,6 @@ namespace SavingsPlatform.Common.Repositories.Marten
                     r =>
                     {
                         var m = _mapper.Map(r);
-                        m.Etag = r.ETag;
                         return m;
                     }).ToList();
 

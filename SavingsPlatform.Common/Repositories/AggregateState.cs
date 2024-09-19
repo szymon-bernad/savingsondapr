@@ -16,6 +16,5 @@ namespace SavingsPlatform.Common.Repositories
 
         [Version]
         public Guid Version { get; set; } = Guid.Empty;
-        public string? ETag { get; set; } = null;
     }
 }

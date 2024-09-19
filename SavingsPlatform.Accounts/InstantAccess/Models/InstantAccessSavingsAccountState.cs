@@ -6,7 +6,6 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess.Models
     public record InstantAccessSavingsAccountState : IAggregateStateEntry
     {
         public required string Key { get; init; } = string.Empty;
-        public string? Etag { get; set; }
         public string? ExternalRef { get; init; }
         public DateTime? OpenedOn { get; set; }
         public DateTime? ActivatedOn { get; set; }

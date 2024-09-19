@@ -10,10 +10,6 @@ namespace SavingsPlatform.Common.Interfaces
     {
         public string? ExternalRef { get; init; }
 
-        public decimal TotalBalance { get; set; }
-
-        public string PlatformId { get; init; }
-
         public bool HasUnpublishedEvents { get; set; }
 
         ICollection<object>? UnpublishedEvents { get; set; }

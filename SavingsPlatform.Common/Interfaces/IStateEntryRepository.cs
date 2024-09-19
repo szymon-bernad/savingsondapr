@@ -8,7 +8,6 @@ namespace SavingsPlatform.Common.Interfaces
         Task<ICollection<T>> QueryAccountsByKeyAsync(string[] keyName, string[] keyValue, bool isKeyValueAString = true);
         Task AddAccountAsync(T account);
         Task<bool> TryUpdateAccountAsync(T account, MessageProcessedEntry? msgEntry);
-
         Task<bool> IsMessageProcessed(string msgId);
     }
 }

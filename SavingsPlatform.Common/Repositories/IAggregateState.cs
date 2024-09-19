@@ -8,11 +8,8 @@ namespace SavingsPlatform.Common.Repositories
 {
     public interface IAggregateState
     {
-        public bool HasUnpublishedEvents { get; set; }
-        public string? UnpublishedEventsJson { get; set; }
-
-        public Guid Version { get; set; }
-
-        public string? ETag { get; set; }
+        bool HasUnpublishedEvents { get; set; }
+        string? UnpublishedEventsJson { get; set; }
+        Guid Version { get; set; }
     }
 }

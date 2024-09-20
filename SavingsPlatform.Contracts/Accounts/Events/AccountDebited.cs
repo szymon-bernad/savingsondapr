@@ -17,5 +17,5 @@ namespace SavingsPlatform.Contracts.Accounts.Events
     DateTime Timestamp,
     string EventType,
     AccountType AccountType,
-    string? PlatformId) : IEvent;
+    string PlatformId) : IEvent;
 }

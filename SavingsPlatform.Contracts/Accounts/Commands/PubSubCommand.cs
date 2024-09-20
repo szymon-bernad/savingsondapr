@@ -9,8 +9,8 @@ namespace SavingsPlatform.Contracts.Accounts.Commands
 {
     public class PubSubCommand : IPubSubCommand
     {
-        public string CommandType { get; set; }
+        public required string CommandType { get; set; }
 
-        public JsonObject Data { get; set; }
+        public required JsonObject Data { get; set; }
     }
 }

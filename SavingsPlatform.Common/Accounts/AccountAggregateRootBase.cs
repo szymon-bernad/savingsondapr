@@ -104,21 +104,14 @@ namespace SavingsPlatform.Common.Accounts
                 return;
             }
 
-            var res = await _repository.TryUpdateAccountAsync(
+            await _repository.TryUpdateAccountAsync(
                 _state!,
                 msgEntry);
-
-            if (!res)
-            {
-                throw new InvalidOperationException(
-                    $"Account with {nameof(_state.Key)} = {_state!.Key}" +
-                    $" was probably updated by another process");
-            }
         }
 
-        protected async Task<bool> ValidateIfProcessedAsync(string msgId)
+        protected Task<bool> ValidateIfProcessedAsync(string msgId)
         {
-            return await _repository.IsMessageProcessed(msgId);
+            return _repository.IsMessageProcessed(msgId);
         }
 
         public T? State => _state;

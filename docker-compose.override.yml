@@ -1,5 +1,4 @@
 version: '3.4'
-
 services:
   savingsondapr.api:
     environment:
@@ -23,11 +22,6 @@ services:
     volumes:
       - "./dapr/components/:/components"
       - "./dapr/configuration:/configuration"
-
-  placement:
-    command: ["./placement", "-port", "50000", "-log-level", "debug"]
-    ports:
-      - "50000:50000"
 
   postgres:
     environment:

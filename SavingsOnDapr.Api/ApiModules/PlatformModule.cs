@@ -29,8 +29,8 @@ public class PlatformModule : ICarterModule
                             {
                                 var cmdString = JsonSerializer.Serialize(evt.Data);
                                 var type = Type.GetType(evt.CommandType, true);
-                                var cmd = JsonSerializer.Deserialize(evt.Data, type);
-                                await mediator.Send(cmd);
+                                var cmd = JsonSerializer.Deserialize(evt.Data, type!);
+                                await mediator.Send(cmd!);
                             }
                         }
                         catch (Exception ex)

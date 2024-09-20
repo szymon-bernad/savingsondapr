@@ -8,7 +8,7 @@ namespace SavingsPlatform.Common.Interfaces
 {
     public interface IAggregateStateEntry : IEntry
     {
-        public string? ExternalRef { get; init; }
+        public string ExternalRef { get; init; }
 
         public bool HasUnpublishedEvents { get; set; }
 

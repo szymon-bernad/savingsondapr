@@ -35,10 +35,16 @@ namespace SavingsPlatform.Common.Services
         public Task PublishCommand<T>(T command)
         {
             var cmdString = JsonSerializer.Serialize(command);
-            return _daprClient.PublishEventAsync(
-                PubSubName, 
-                CommandsTopicName, 
-                new PubSubCommand { CommandType = typeof(T).AssemblyQualifiedName, Data = JsonNode.Parse(cmdString).AsObject() });
+            var cmdData = JsonNode.Parse(cmdString);
+            if (cmdData is not null)
+            {
+                return _daprClient.PublishEventAsync(
+                    PubSubName,
+                    CommandsTopicName,
+                    new PubSubCommand { CommandType = typeof(T).AssemblyQualifiedName!, Data = cmdData.AsObject() });
+            }
+
+            throw new InvalidOperationException("Failed to serialize command data");
         }
 
         public Task PublishEvents(ICollection<object> events)
@@ -46,31 +52,24 @@ namespace SavingsPlatform.Common.Services
             return Task.WhenAll(
                 events.Select(e =>
                 {
-                    try
+                    var jsonObject = e as JsonObject;
+                    if (jsonObject is not null)
                     {
-                        var jsonObject = e as JsonObject;
-                        if (jsonObject is not null)
+                        var evtType = jsonObject["EventType"]?.GetValue<string>().ToLower();
+                        if (!string.IsNullOrEmpty(evtType))
                         {
-                            var evtType = jsonObject["EventType"]?.GetValue<string>().ToLower();
-                            if (!string.IsNullOrEmpty(evtType))
-                            {
-                                return _daprClient.PublishEventAsync(PubSubName, evtType, jsonObject);
-                            }
+                            return _daprClient.PublishEventAsync(PubSubName, evtType, jsonObject);
                         }
-                        else
-                        {
-                            var evtType = e.GetType().GetProperty("EventType")?.GetValue(e)?.ToString()?.ToLower();
-                            if (!string.IsNullOrEmpty(evtType))
-                            {
-                                return _daprClient.PublishEventAsync(PubSubName, evtType, e);
-                            }
-                        }
-                        return Task.CompletedTask;
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        throw;
+                        var evtType = e.GetType().GetProperty("EventType")?.GetValue(e)?.ToString()?.ToLower();
+                        if (!string.IsNullOrEmpty(evtType))
+                        {
+                            return _daprClient.PublishEventAsync(PubSubName, evtType, e);
+                        }
                     }
+                    return Task.CompletedTask;
                 }));
         }
     }

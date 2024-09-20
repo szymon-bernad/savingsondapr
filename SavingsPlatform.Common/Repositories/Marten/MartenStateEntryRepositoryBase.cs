@@ -34,7 +34,7 @@ namespace SavingsPlatform.Common.Repositories.Marten
             return TryUpsertAccountAsync(account, null);
         }
 
-        public Task<bool> TryUpdateAccountAsync(TEntry account, MessageProcessedEntry? msgEntry)
+        public Task TryUpdateAccountAsync(TEntry account, MessageProcessedEntry? msgEntry)
         {
             return TryUpsertAccountAsync(account, msgEntry);
         }
@@ -84,7 +84,7 @@ namespace SavingsPlatform.Common.Repositories.Marten
             await _documentSession.SaveChangesAsync();
         }
 
-        protected async Task<bool> TryUpsertAccountAsync(TEntry entry, MessageProcessedEntry? msgEntry)
+        protected async Task TryUpsertAccountAsync(TEntry entry, MessageProcessedEntry? msgEntry)
         {
             try
             {
@@ -96,12 +96,11 @@ namespace SavingsPlatform.Common.Repositories.Marten
                     await _eventPublishingService.PublishEvents(entry.UnpublishedEvents);
                     await TryUpsertAfterEventsPublishedAsync(stateDto);
                 }
-                return true;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error upserting account with key: {entry.Key}.");
-                return false;
+                throw;
             }
         }
 

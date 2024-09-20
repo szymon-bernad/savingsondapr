@@ -51,7 +51,7 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
                 AccountType = AccountType.SavingsAccount,
                 Timestamp = DateTime.UtcNow,
                 EventType = typeof(AccountCreated).Name,
-                PlatformId = request.PlatformId ?? string.Empty,
+                PlatformId = request.PlatformId,
             }
         };
 

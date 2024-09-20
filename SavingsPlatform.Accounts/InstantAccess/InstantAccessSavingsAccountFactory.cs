@@ -22,7 +22,7 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
         {
             if (id is null)
             {
-                return new InstantAccessSavingsAccount(_repository, null);
+                return new InstantAccessSavingsAccount(_repository, _simulationConfig, null);
             }
 
             var stateEntry = await _repository.GetAccountAsync(id);

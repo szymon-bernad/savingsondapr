@@ -29,7 +29,8 @@ public class PlatformModule : ICarterModule
                             {
                                 var cmdString = JsonSerializer.Serialize(evt.Data);
                                 var type = Type.GetType(evt.CommandType, true);
-                                var cmd = JsonSerializer.Deserialize(evt.Data, type!);
+                                var cmd = JsonSerializer.Deserialize(cmdString, type!);
+                                logger.LogInformation($"Received command with Id = {evt.MsgId}");
                                 await mediator.Send(cmd!);
                             }
                         }

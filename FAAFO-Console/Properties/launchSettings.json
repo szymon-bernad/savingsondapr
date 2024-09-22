@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ConsoleApp1": {
+      "commandName": "Project",
+      "commandLineArgs": "--ExternalRef qwertyz --NumberOfRequests 2 --AverageAmount 200"
+    }
+  }
+}

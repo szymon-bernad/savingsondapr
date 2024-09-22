@@ -87,8 +87,8 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
 
         var transactionId = Guid.NewGuid();
         var eventsToPublish = _state.UnpublishedEvents?.Any() ?? false ?
-            new Collection<object>(_state.UnpublishedEvents.ToList()) :
-            new Collection<object>();
+            new Collection<object>([.. _state.UnpublishedEvents]) :
+            [];
 
         if (_state!.TotalBalance == 0m)
         {
@@ -148,8 +148,8 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
 
         var transactionId = Guid.NewGuid();
         var eventsToPublish = _state.UnpublishedEvents?.Any() ?? false ?
-            new Collection<object>(_state.UnpublishedEvents.ToList()) :
-            new Collection<object>();
+            new Collection<object>([.. _state.UnpublishedEvents]) :
+            [];
         eventsToPublish.Add(new AccountDebited(
                     Guid.NewGuid().ToString(),
                     _state.ExternalRef,

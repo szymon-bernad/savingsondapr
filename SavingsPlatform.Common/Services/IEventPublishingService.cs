@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using SavingsPlatform.Contracts.Accounts.Commands;
 
-namespace SavingsPlatform.Common.Services
+namespace SavingsPlatform.Common.Services;
+
+public interface IEventPublishingService
 {
-    public interface IEventPublishingService
-    {
-        Task PublishEvents(ICollection<object> events);
+    Task PublishEvents(ICollection<object> events);
 
-        Task PublishCommand<T>(T command);
-    }
+    Task PublishCommand<T>(T command) where T : ICommandRequest;
 }

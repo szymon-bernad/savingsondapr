@@ -30,7 +30,7 @@ public class SavingsModule : ICarterModule
                     return Results.BadRequest("Account already exists");
                 }
 
-                await publishingService.PublishCommand(new CreateInstantSavingsAccountCommand(request.ExternalRef, request.InterestRate, request.PlatformId));
+                await publishingService.PublishCommand(new CreateInstantSavingsAccountCommand(Guid.NewGuid().ToString(), request.ExternalRef, request.InterestRate, request.PlatformId));
 
                 return Results.Accepted($"/api/savings/savings-account/{request.ExternalRef}");
             }).WithTags(["savings"]);
@@ -43,7 +43,7 @@ public class SavingsModule : ICarterModule
                 await publishingService.PublishCommand(
                     new CreditAccountCommand(cmdId, request.ExternalRef, request.Amount, DateTime.UtcNow, request.TransferRef));
 
-                return Results.Accepted($"/api/savings/savings-account/command/{cmdId}");
+                return Results.Accepted($"/api/platform/savings-account/command/{cmdId}");
             }).WithTags(["savings"]);
 
         app.MapPost("/api/savings/savings-account/:debit",
@@ -54,7 +54,7 @@ public class SavingsModule : ICarterModule
                 await publishingService.PublishCommand(
                     new DebitAccountCommand(cmdId, request.ExternalRef, request.Amount, DateTime.UtcNow, request.TransferRef));
 
-                return Results.Accepted($"/v1/savings-account/command/{cmdId}");
+                return Results.Accepted($"/api/platform/savings-account/command/{cmdId}");
             }).WithTags(["savings"]);
     }
 }

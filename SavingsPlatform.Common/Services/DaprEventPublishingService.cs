@@ -32,19 +32,12 @@ namespace SavingsPlatform.Common.Services
             _daprClient = daprClient;
         }
 
-        public Task PublishCommand<T>(T command)
+        public Task PublishCommand<T>(T command) where T : ICommandRequest
         {
-            var cmdString = JsonSerializer.Serialize(command);
-            var cmdData = JsonNode.Parse(cmdString);
-            if (cmdData is not null)
-            {
-                return _daprClient.PublishEventAsync(
-                    PubSubName,
-                    CommandsTopicName,
-                    new PubSubCommand { CommandType = typeof(T).AssemblyQualifiedName!, Data = cmdData.AsObject() });
-            }
-
-            throw new InvalidOperationException("Failed to serialize command data");
+            return _daprClient.PublishEventAsync(
+                PubSubName,
+                CommandsTopicName,
+                new PubSubCommand { CommandType = typeof(T).AssemblyQualifiedName!, Data = command, MsgId = command.MsgId });
         }
 
         public Task PublishEvents(ICollection<object> events)

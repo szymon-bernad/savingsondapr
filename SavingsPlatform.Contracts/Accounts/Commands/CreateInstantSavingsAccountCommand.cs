@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 namespace SavingsPlatform.Contracts.Accounts.Commands
 {
     public record CreateInstantSavingsAccountCommand(
+        string MsgId,
         string ExternalRef,
         decimal InterestRate,
-        string PlatformId) : IRequest;
+        string PlatformId) : ICommandRequest;
 }

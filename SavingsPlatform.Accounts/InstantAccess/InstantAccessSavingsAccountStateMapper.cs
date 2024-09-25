@@ -8,7 +8,7 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess;
 
 public class InstantAccessSavingsAccountStateMapper : IStateMapper<AggregateState<InstantAccessSavingsAccountDto>, InstantAccessSavingsAccountState>
 {
-    InstantAccessSavingsAccountState IStateMapper<AggregateState<InstantAccessSavingsAccountDto>, InstantAccessSavingsAccountState>.Map(AggregateState<InstantAccessSavingsAccountDto> state)
+    public InstantAccessSavingsAccountState Map(AggregateState<InstantAccessSavingsAccountDto> state)
     {
         var events = !string.IsNullOrEmpty(state.UnpublishedEventsJson) ?
             JsonSerializer.Deserialize<IEnumerable<JsonNode>>(state!.UnpublishedEventsJson) : Enumerable.Empty<JsonNode>();
@@ -24,7 +24,6 @@ public class InstantAccessSavingsAccountStateMapper : IStateMapper<AggregateStat
             OpenedOn = state.Data.OpenedOn,
             ActivatedOn = state.Data.ActivatedOn,
             TotalBalance = state.Data!.TotalBalance,
-            LastTransactionId = state.Data.LastTransactionId,
             PlatformId = state.Data.PlatformId ?? string.Empty,
             HasUnpublishedEvents = state.HasUnpublishedEvents,
             InterestApplicationDueOn = state.Data.InterestApplicationDueOn,
@@ -45,7 +44,6 @@ public class InstantAccessSavingsAccountStateMapper : IStateMapper<AggregateStat
                 dto.InterestRate,
                 dto.TotalBalance,
                 dto.AccruedInterest,
-                dto.LastTransactionId,
                 dto.PlatformId,
                 dto.InterestApplicationFrequency,
                 dto.InterestApplicationDueOn),

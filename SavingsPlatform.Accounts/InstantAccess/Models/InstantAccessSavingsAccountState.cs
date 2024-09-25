@@ -3,7 +3,7 @@ using SavingsPlatform.Contracts.Accounts.Enums;
 
 namespace SavingsPlatform.Accounts.Aggregates.InstantAccess.Models
 {
-    public record InstantAccessSavingsAccountState : IAggregateStateEntry
+    public record InstantAccessSavingsAccountState : IAccountAggregateStateEntry
     {
         public required string Key { get; init; } = string.Empty;
         public required string ExternalRef { get; init; } = string.Empty;
@@ -12,7 +12,6 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess.Models
         public decimal InterestRate { get; set; }
         public decimal TotalBalance { get; set; }
         public decimal AccruedInterest {  get; set; }
-        public Guid? LastTransactionId { get; set; }
         public ProcessFrequency InterestApplicationFrequency { get; set; } = ProcessFrequency.Weekly;
         public DateTime? InterestApplicationDueOn { get; set; }
         public required string PlatformId { get; init; }

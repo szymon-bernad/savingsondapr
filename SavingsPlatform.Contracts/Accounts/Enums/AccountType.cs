@@ -9,6 +9,7 @@ namespace SavingsPlatform.Contracts.Accounts.Enums
     public enum AccountType
     {
         SavingsAccount,
+        CurrentAccount,
         SettlementAccount,
     }
 }

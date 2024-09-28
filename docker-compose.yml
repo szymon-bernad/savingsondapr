@@ -6,6 +6,9 @@ services:
     ports:
       - "9411:9411"  # allows us to access the web console
   
+  placement:
+    image: "daprio/dapr:1.14.2"
+
   rabbitmq:
     image: rabbitmq:3.13.7-management-alpine
     healthcheck:
@@ -36,6 +39,8 @@ services:
     image: "daprio/daprd:1.14.2"
     network_mode: "service:savingsondapr.api"
     depends_on:
+      postgres:
+        condition: service_started
       savingsondapr.api:
         condition: service_started
       rabbitmq:

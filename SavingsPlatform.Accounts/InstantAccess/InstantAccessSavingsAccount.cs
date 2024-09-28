@@ -5,7 +5,6 @@ using SavingsPlatform.Common.Interfaces;
 using SavingsPlatform.Contracts.Accounts.Commands;
 using SavingsPlatform.Contracts.Accounts.Enums;
 using SavingsPlatform.Contracts.Accounts.Events;
-using SavingsPlatform.Contracts.Accounts.Requests;
 using System.Collections.ObjectModel;
 
 namespace SavingsPlatform.Accounts.Aggregates.InstantAccess;
@@ -43,16 +42,14 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
 
         var eventsToPub = new Collection<object>
         {
-            new AccountCreated
-            {
-                Id = Guid.NewGuid().ToString(),
-                ExternalRef = request.ExternalRef,
-                AccountId = accountId,
-                AccountType = AccountType.SavingsAccount,
-                Timestamp = DateTime.UtcNow,
-                EventType = typeof(AccountCreated).Name,
-                PlatformId = request.PlatformId,
-            }
+            new AccountCreated(
+                Guid.NewGuid().ToString(),
+                request.ExternalRef,
+                accountId,
+                request.CurrentAccountId,
+                AccountType.SavingsAccount,
+                DateTime.UtcNow,
+                typeof(AccountCreated).Name)
         };
 
         var state = new InstantAccessSavingsAccountState
@@ -63,7 +60,7 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
             InterestRate = request.InterestRate,
             TotalBalance = 0m,
             AccruedInterest = 0m,
-            PlatformId = request.PlatformId,
+            CurrentAccountId = request.CurrentAccountId,
             HasUnpublishedEvents = true,
             UnpublishedEvents = eventsToPub,
         };
@@ -83,12 +80,7 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
             return;
         }
 
-        ValidateForCredit(request.Amount);
-
-        var transactionId = Guid.NewGuid();
-        var eventsToPublish = _state.UnpublishedEvents?.Any() ?? false ?
-            new Collection<object>([.. _state.UnpublishedEvents]) :
-            [];
+        var eventsToPublish = PrepareForCredit(request.Amount, request.TransferRef);
 
         if (_state!.TotalBalance == 0m)
         {
@@ -107,23 +99,11 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
                     _state.InterestRate,
                     DateTime.UtcNow,
                     typeof(InstantAccessSavingsAccountActivated)!.Name,
-                    _state.PlatformId));
+                    _state.CurrentAccountId));
         }
-
-        eventsToPublish.Add(new AccountCredited(
-                Guid.NewGuid().ToString(),
-                _state.ExternalRef,
-                _state.Key,
-                request.Amount,
-                request.TransferRef,
-                DateTime.UtcNow,
-                typeof(AccountCredited)!.Name,
-                _state.Type,
-                _state.PlatformId));
 
         _state = _state with
         {
-            LastTransactionId = transactionId,
             TotalBalance = _state.TotalBalance + request.Amount,
             HasUnpublishedEvents = true,
             UnpublishedEvents = eventsToPublish,
@@ -144,26 +124,10 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
             return;
         }
 
-        ValidateForDebit(request.Amount, _state.TotalBalance);
-
-        var transactionId = Guid.NewGuid();
-        var eventsToPublish = _state.UnpublishedEvents?.Any() ?? false ?
-            new Collection<object>([.. _state.UnpublishedEvents]) :
-            [];
-        eventsToPublish.Add(new AccountDebited(
-                    Guid.NewGuid().ToString(),
-                    _state.ExternalRef,
-                    _state.Key,
-                    request.Amount,
-                    request.TransferRef,
-                    DateTime.UtcNow,
-                    typeof(AccountDebited)!.Name,
-                    _state.Type,
-                    _state.PlatformId));
+        var eventsToPublish = PrepareForDebit(request.Amount, request.TransferRef);
 
         _state = _state with
         {
-            LastTransactionId = transactionId,
             TotalBalance = _state.TotalBalance - request.Amount,
             HasUnpublishedEvents = true,
             UnpublishedEvents = eventsToPublish,
@@ -205,7 +169,7 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
                         _state.InterestRate,
                         DateTime.UtcNow,
                         typeof(AccountInterestAccrued)!.Name,
-                        _state.PlatformId));
+                        _state.CurrentAccountId));
 
                 _state = _state with
                 {
@@ -250,7 +214,7 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
                     _state.InterestRate,
                     DateTime.UtcNow,
                     typeof(AccountInterestAccrued)!.Name,
-                    _state.PlatformId));
+                    _state.CurrentAccountId));
 
             _state = _state with
             {

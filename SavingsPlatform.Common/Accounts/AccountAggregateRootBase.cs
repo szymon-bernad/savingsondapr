@@ -1,9 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
 using SavingsPlatform.Common.Interfaces;
+using SavingsPlatform.Contracts.Accounts.Commands;
+using SavingsPlatform.Contracts.Accounts.Events;
+using System.Collections.ObjectModel;
+using static Google.Rpc.Context.AttributeContext.Types;
 
 namespace SavingsPlatform.Common.Accounts
 {
-    public class AccountAggregateRootBase<T> : IAggregateRoot<T> where T : IAggregateStateEntry
+    public class AccountAggregateRootBase<T> : IAggregateRoot<T> where T : IAccountAggregateStateEntry
     {
         protected T? _state;
         protected readonly IStateEntryRepository<T> _repository;
@@ -52,41 +56,70 @@ namespace SavingsPlatform.Common.Accounts
             }
         }
 
-        protected void ValidateForCredit(decimal amount)
+        protected ICollection<object> PrepareForCredit(decimal amount, string? transferRef)
         {
             if (_state is null)
             {
-                _logger?.LogError($"{nameof(ValidateForCredit)}: Account with invalid state.");
+                _logger?.LogError($"{nameof(PrepareForCredit)}: Account with invalid state.");
                 throw new ApplicationException($"Account with invalid state.");
             }
 
             if (amount <= 0m)
             {
-                _logger?.LogError($"{nameof(ValidateForCredit)}: Credit transaction amount must be greater than 0.00");
+                _logger?.LogError($"{nameof(PrepareForCredit)}: Credit transaction amount must be greater than 0.00");
                 throw new InvalidOperationException($"Credit transaction amount must be greater than 0.00");
             }
+
+            var transactionId = Guid.NewGuid();
+            var eventsToPublish = _state.UnpublishedEvents?.Any() ?? false ?
+                new Collection<object>([.. _state.UnpublishedEvents]) :
+                [];
+
+            eventsToPublish.Add(new AccountCredited(
+                Guid.NewGuid().ToString(),
+                _state.ExternalRef,
+                _state.Key,
+                amount,
+                transferRef,
+                DateTime.UtcNow,
+                typeof(AccountCredited)!.Name,
+                _state.Type,
+                _state.CurrentAccountId));
+
+            return eventsToPublish;
         }
 
-        protected void ValidateForDebit(decimal amount, decimal totalBalance)
+        protected ICollection<object>? PrepareForDebit(decimal amount, string? transferRef)
         {
             if (_state is null)
             {
-                _logger?.LogError($"{nameof(ValidateForDebit)}: Account with invalid state.");
+                _logger?.LogError($"{nameof(PrepareForDebit)}: Account with invalid state.");
                 throw new ApplicationException($"Account with invalid state.");
             }
             if (amount <= 0m)
             {
-                _logger?.LogError($"{nameof(ValidateForDebit)}: Debiy transaction amount must be greater than 0.00");
+                _logger?.LogError($"{nameof(PrepareForDebit)}: Debiy transaction amount must be greater than 0.00");
                 throw new InvalidOperationException($"Debiy transaction amount must be greater than 0.00");
             }
 
-            if (totalBalance < amount)
+            if (_state.TotalBalance < amount)
             {
-                _logger?.LogError($"{nameof(ValidateForDebit)}: Account with {nameof(_state.Key)} = {_state.Key} has insufficient funds.");
+                _logger?.LogError($"{nameof(PrepareForDebit)}: Account with {nameof(_state.Key)} = {_state.Key} has insufficient funds.");
                 throw new InvalidOperationException(
                     $"Account with {nameof(_state.Key)} = {_state.Key}" +
                     $" has insufficient funds.");
             }
+
+            return [ new AccountDebited(
+                Guid.NewGuid().ToString(),
+                _state.ExternalRef,
+                _state.Key,
+                amount,
+                transferRef,
+                DateTime.UtcNow,
+                typeof(AccountDebited)!.Name,
+                _state.Type,
+                _state.CurrentAccountId)];
         }
 
         public async Task TryUpdateAsync(string? msgId)

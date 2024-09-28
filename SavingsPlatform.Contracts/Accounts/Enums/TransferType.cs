@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 namespace SavingsPlatform.Contracts.Accounts.Enums
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum AccountType
+    public enum TransferType
     {
-        SavingsAccount,
-        CurrentAccount,
-        SettlementAccount,
+        CurrentToCurrent,
+        SavingsToCurrent,
+        CurrentToSavings,
     }
 }

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace SavingsPlatform.Contracts.Accounts.Events
@@ -17,5 +18,5 @@ namespace SavingsPlatform.Contracts.Accounts.Events
     DateTime Timestamp,
     string EventType,
     AccountType AccountType,
-    string PlatformId) : IEvent;
+    string CurrentAccountId) : IEvent;
 }

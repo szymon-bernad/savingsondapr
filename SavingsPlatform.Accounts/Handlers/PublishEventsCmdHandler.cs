@@ -28,10 +28,10 @@ public class PublishEventsCommandHandler : IRequestHandler<PublishEventsCommand>
         {
             await _threadSynchronizer.ExecuteSynchronizedAsync(request.AccountId, 
                 async () =>
-            {
-                var acc = await _instantAccessFactory.GetInstanceAsync(request.AccountId);
-                await acc.TryUpdateAsync(null);
-            });
+                {
+                    var acc = await _instantAccessFactory.GetInstanceAsync(request.AccountId);
+                    await acc.TryUpdateAsync(null);
+                });
         }
     }
 }

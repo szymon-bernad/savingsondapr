@@ -11,6 +11,7 @@ using Carter;
 using SavingsPlatform.Contracts.Accounts.Commands;
 using System.Reflection;
 using SavingsPlatform.Accounts.Handlers;
+using SavingsPlatform.Accounts.Current.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +24,7 @@ jsonOptions.Converters.Add(new JsonStringEnumConverter());
 var daprHttpPort = Environment.GetEnvironmentVariable("DAPR_HTTP_PORT") ??
                     throw new ApplicationException("DAPR_HTTP_PORT is not set as Env Var");
 builder.Services.AddDaprClient(dpr => { dpr.UseJsonSerializationOptions(jsonOptions); });
-builder.Services.AddSavingsAccounts(builder.Configuration, Int32.Parse(daprHttpPort));
+builder.Services.AddSavingsAccounts();
 
 builder.Services.AddMarten(options =>
     {
@@ -35,6 +36,7 @@ builder.Services.AddMarten(options =>
 
         options.Schema.For<MessageProcessedEntry>().UseIdentityKey();
         options.Schema.For<AggregateState<InstantAccessSavingsAccountState>>().UseOptimisticConcurrency(true);
+        options.Schema.For<AggregateState<CurrentAccountState>>().UseOptimisticConcurrency(true);
 
     })
     .BuildSessionsWith<CustomSessionFactory>();
@@ -63,5 +65,6 @@ app.MapCarter();
 
 app.MapSubscribeHandler();
 app.UseRouting();
+app.MapActorsHandlers();
 
 app.Run();

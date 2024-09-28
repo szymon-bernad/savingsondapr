@@ -1,10 +1,4 @@
-﻿using SavingsPlatform.Common.Interfaces;
-using SavingsPlatform.Contracts.Accounts.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using SavingsPlatform.Contracts.Accounts.Enums;
 
 namespace SavingsPlatform.Accounts.Aggregates.InstantAccess.Models
 {
@@ -16,8 +10,7 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess.Models
         decimal InterestRate,
         decimal TotalBalance,
         decimal AccruedInterest,
-        Guid? LastTransactionId,
-        string? PlatformId,
+        string CurrentAccountId,
         ProcessFrequency InterestApplicationFrequency = ProcessFrequency.Weekly,
         DateTime? InterestApplicationDueOn = null,
         AccountType Type = AccountType.SavingsAccount);

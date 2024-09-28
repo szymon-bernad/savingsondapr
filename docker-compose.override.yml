@@ -3,18 +3,26 @@ services:
   savingsondapr.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:80
+      - ASPNETCORE_URLS=http://+:8080
       - DAPR_HTTP_PORT=3605
       - NAMESPACE=savings
       - ConnectionStrings__DocumentStore=host='postgres';username='postgres';password='example';port='5432';database='doc-store'
     ports:
-      - "5136:80"
+      - "5136:8080"
+
+  placement:
+    command: ["./placement", "-port", "50000", "-log-level", "debug"]
+    ports:
+      - "50000:50000"
 
   savingsondapr.api-dapr:
     command: ["./daprd",
       "--app-id", "dapr-savings-api",
-      "--app-port", "80",
+      "--app-port", "8080",
       "--dapr-http-port", "3605",
+      "--app-protocol", "http",
+      "--enable-app-health-check",
+      "--app-health-check-path", "/healthz",
       "--placement-host-address", "placement:50000",
       "--resources-path", "/components",
       "-config", "/configuration/config.yaml"
@@ -27,4 +35,4 @@ services:
     environment:
       - POSTGRES_PASSWORD=example
       - POSTGRES_USER=postgres
-      - POSTGRES_DB=dapr-store
+      - POSTGRES_DB=savings-store

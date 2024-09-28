@@ -36,7 +36,7 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
 
         public async Task<InstantAccessSavingsAccount> GetInstanceByExternalRefAsync(string externalRef)
         {
-            var stateEntry = (await _repository.QueryAccountsByKeyAsync(new string[] { "data.externalRef" }, new string[] { externalRef })).SingleOrDefault();
+            var stateEntry = (await _repository.QueryAccountsByKeyAsync(["data.externalRef"], [externalRef])).SingleOrDefault();
             if (stateEntry is not null)
             {
                 return new InstantAccessSavingsAccount(_repository, _simulationConfig, stateEntry);

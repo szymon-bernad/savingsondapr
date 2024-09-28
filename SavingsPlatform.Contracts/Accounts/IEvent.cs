@@ -5,6 +5,6 @@
         string Id { get; }
         DateTime Timestamp { get; }
         string EventType { get; }
-        string PlatformId { get; }
+        string CurrentAccountId { get; }
     }
 }

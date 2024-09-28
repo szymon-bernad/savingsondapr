@@ -93,7 +93,7 @@ public class PlatformModule : ICarterModule
                    IMediator mediator
                    ) =>
         {
-            var iasaRes = await iasaRepository.QueryAccountsByKeyAsync(new string[] { "hasUnpublishedEvents" }, new string[] { "true" }, false);
+            var iasaRes = await iasaRepository.QueryAccountsByKeyAsync(["hasUnpublishedEvents"], ["true"], false);
 
             await Task.WhenAll(
                             iasaRes.Select(

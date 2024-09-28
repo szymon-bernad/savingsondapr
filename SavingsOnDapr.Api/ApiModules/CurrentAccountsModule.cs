@@ -25,7 +25,7 @@ public class CurrentAccountsModule : ICarterModule
                    CreateCurrentAccount request) =>
             {
 
-                var caResult = await caRepo.QueryAccountsByKeyAsync(new string[] { "data.externalRef" }, new string[] { request.ExternalRef });
+                var caResult = await caRepo.QueryAccountsByKeyAsync(["data.externalRef"], [request.ExternalRef]);
                 if (caResult.Any())
                 {
                     return Results.BadRequest("Current Account already exists.");

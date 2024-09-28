@@ -1,15 +1,14 @@
 ﻿using Dapr.Actors.Runtime;
 using Microsoft.Extensions.Logging;
-using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess;
-using SavingsPlatform.Common.Interfaces;
-using SavingsPlatform.Common.Services;
-using SavingsPlatform.Contracts.Accounts.Enums;
-using SavingsPlatform.Contracts.Accounts.Models;
-using SavingsPlatform.Contracts.Accounts.Requests;
+using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Accounts.Current;
 using SavingsPlatform.Accounts.Current.Models;
+using SavingsPlatform.Common.Interfaces;
+using SavingsPlatform.Common.Services;
 using SavingsPlatform.Contracts.Accounts.Commands;
+using SavingsPlatform.Contracts.Accounts.Enums;
+using SavingsPlatform.Contracts.Accounts.Models;
 
 namespace SavingsPlatform.Accounts.Actors;
 
@@ -102,6 +101,21 @@ public class DepositTransferActor : Actor, IDepositTransferActor, IRemindable
         await StateManager.SetStateAsync(DepositTransferState, transferData);
     }
 
+    public async Task ReceiveReminderAsync(string reminderName, byte[] state, TimeSpan dueTime, TimeSpan period)
+    {
+        var res = reminderName switch
+        {
+            TransferAttempt => Task.Run(async () =>
+            {
+                var transferData = await StateManager.GetStateAsync<DepositTransferData>(DepositTransferState);
+                await InitiateTransferAsync(transferData);
+            }),
+            _ => Task.CompletedTask
+        };
+
+        await res;
+    }
+
     private Task StartTransfer(DepositTransferData transferData)
     {
         return transferData.Direction switch
@@ -135,7 +149,10 @@ public class DepositTransferActor : Actor, IDepositTransferActor, IRemindable
             transferData = transferData with { Status = DepositTransferStatus.DebtorDebited };
 
             await StateManager.SetStateAsync(DepositTransferState, transferData);
-            await UnregisterReminderAsync(TransferAttempt);
+            if(!transferData.IsFirstAttempt)
+            {
+                await UnregisterReminderAsync(TransferAttempt);
+            }
         }
 
         if (transferData.IsFirstAttempt && registerReminder)
@@ -174,20 +191,5 @@ public class DepositTransferActor : Actor, IDepositTransferActor, IRemindable
             transferData = transferData with { Status = DepositTransferStatus.DebtorDebited };
             await StateManager.SetStateAsync(DepositTransferState, transferData);
         }
-    }
-
-    public async Task ReceiveReminderAsync(string reminderName, byte[] state, TimeSpan dueTime, TimeSpan period)
-    {
-        var res = reminderName switch
-        {
-            TransferAttempt => Task.Run(async() =>
-            {
-                var transferData = await StateManager.GetStateAsync<DepositTransferData>(DepositTransferState);
-                await InitiateTransferAsync(transferData);
-            }),
-            _ => Task.CompletedTask
-        };
-
-        await res;
     }
 }

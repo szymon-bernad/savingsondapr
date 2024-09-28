@@ -18,12 +18,12 @@ namespace SavingsPlatform.Common.Repositories.Marten
         private readonly ILogger _logger;
 
         public MartenStateEntryRepositoryBase(
-            IDocumentSession docSession,
+            ISessionFactory docSession,
             IStateMapper<AggregateState<TData>, TEntry> stateMapper,
             IEventPublishingService publishingService,
             ILogger logger)
         {
-            _documentSession = docSession;
+            _documentSession = docSession.OpenSession();
             _mapper = stateMapper;
             _eventPublishingService = publishingService;
             _logger = logger;
@@ -148,8 +148,16 @@ namespace SavingsPlatform.Common.Repositories.Marten
 
         public async Task<bool> IsMessageProcessed(string msgId)
         {
-            var res = await _documentSession.LoadAsync<MessageProcessedEntry>(msgId);
-            return res is not null;
+            try
+            {
+                var res = await _documentSession.LoadAsync<MessageProcessedEntry>(msgId);
+                return res is not null;
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, $"Error checking if message with Id = {msgId} is processed.");
+                throw;
+            }
         }
     }
 }

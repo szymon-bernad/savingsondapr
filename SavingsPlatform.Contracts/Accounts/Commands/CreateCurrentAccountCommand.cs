@@ -2,5 +2,4 @@
 
 public record CreateCurrentAccountCommand(
     string MsgId,
-    string ExternalRef,
-    string PlatformId) : ICommandRequest;
+    string ExternalRef) : ICommandRequest;

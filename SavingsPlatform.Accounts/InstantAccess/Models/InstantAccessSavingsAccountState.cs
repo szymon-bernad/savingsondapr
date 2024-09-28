@@ -14,7 +14,7 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess.Models
         public decimal AccruedInterest {  get; set; }
         public ProcessFrequency InterestApplicationFrequency { get; set; } = ProcessFrequency.Weekly;
         public DateTime? InterestApplicationDueOn { get; set; }
-        public required string PlatformId { get; init; }
+        public required string CurrentAccountId { get; init; }
         public bool HasUnpublishedEvents { get; set; } = false;
         public ICollection<object>? UnpublishedEvents { get; set; } = default;
         public AccountType Type { get; set; } = AccountType.SavingsAccount;

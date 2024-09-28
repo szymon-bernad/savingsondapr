@@ -39,16 +39,14 @@ public class CurrentAccount : AccountAggregateRootBase<CurrentAccountState>
 
         var eventsToPub = new Collection<object>
         {
-            new AccountCreated
-            {
-                Id = Guid.NewGuid().ToString(),
-                ExternalRef = request.ExternalRef,
-                AccountId = accountId,
-                AccountType = AccountType.CurrentAccount,
-                Timestamp = DateTime.UtcNow,
-                EventType = typeof(AccountCreated).Name,
-                PlatformId = request.PlatformId,
-            }
+            new AccountCreated(
+                Guid.NewGuid().ToString(),
+                request.ExternalRef,
+                accountId,
+                accountId,
+                AccountType.CurrentAccount,
+                DateTime.UtcNow,
+                typeof(AccountCreated).Name)
         };
 
         var state = new CurrentAccountState
@@ -57,7 +55,6 @@ public class CurrentAccount : AccountAggregateRootBase<CurrentAccountState>
             ExternalRef = request.ExternalRef,
             OpenedOn = DateTime.UtcNow,
             TotalBalance = 0m,
-            PlatformId = request.PlatformId,
             HasUnpublishedEvents = true,
             UnpublishedEvents = eventsToPub,
         };

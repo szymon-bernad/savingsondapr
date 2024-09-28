@@ -10,5 +10,5 @@ namespace SavingsPlatform.Contracts.Accounts.Events
         decimal InterestRate,
         DateTime Timestamp,
         string EventType,
-        string PlatformId) : IEvent;
+        string CurrentAccountId) : IEvent;
 }

@@ -8,21 +8,28 @@ using SavingsPlatform.Common.Interfaces;
 using SavingsPlatform.Common.Repositories;
 using SavingsPlatform.Common.Services;
 using SavingsPlatform.Common.Helpers;
+using SavingsPlatform.Accounts.Current.Models;
+using SavingsPlatform.Accounts.Current;
+using SavingsPlatform.Accounts.Actors;
 
 namespace SavingsPlatform.Accounts.DependencyInjection;
 
 public static class SavingsPlatformAccountsDIExt
 {
-    public static IServiceCollection AddSavingsAccounts(
-        this IServiceCollection services,
-        ConfigurationManager configuration,
-        int daprPort)
+    public static IServiceCollection AddSavingsAccounts(this IServiceCollection services)
     {
-        services.AddTransient<IStateMapper<AggregateState<InstantAccessSavingsAccountDto>, InstantAccessSavingsAccountState>, InstantAccessSavingsAccountStateMapper>();
-        services.AddScoped<IStateEntryRepository<InstantAccessSavingsAccountState>, InstantAccessSavingsAccountRepository>();
-        services.AddTransient<IAggregateRootFactory<InstantAccessSavingsAccount, InstantAccessSavingsAccountState>, InstantAccessSavingsAccountFactory>();
-        services.AddTransient<IEventPublishingService, DaprEventPublishingService>();
-        services.AddSingleton<IThreadSynchronizer, ThreadSynchronizer>();
+        services.AddTransient<IStateMapper<AggregateState<InstantAccessSavingsAccountDto>, InstantAccessSavingsAccountState>, InstantAccessSavingsAccountStateMapper>()
+            .AddScoped<IStateEntryRepository<InstantAccessSavingsAccountState>, InstantAccessSavingsAccountRepository>()
+            .AddTransient<IAggregateRootFactory<InstantAccessSavingsAccount, InstantAccessSavingsAccountState>, InstantAccessSavingsAccountFactory>()
+            .AddTransient<IStateMapper<AggregateState<CurrentAccountDto>, CurrentAccountState>, CurrentAccountStateMapper>()
+            .AddScoped<IStateEntryRepository<CurrentAccountState>, CurrentAccountRepository>()
+            .AddTransient<IAggregateRootFactory<CurrentAccount, CurrentAccountState>, CurrentAccountFactory>()
+            .AddScoped<IEventPublishingService, DaprEventPublishingService>()
+            .AddSingleton<IThreadSynchronizer, ThreadSynchronizer>()
+            .AddActors(options =>
+                {
+                    options.Actors.RegisterActor<DepositTransferActor>();
+                });
 
         return services;
     }

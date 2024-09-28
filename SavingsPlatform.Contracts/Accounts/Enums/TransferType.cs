@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace SavingsPlatform.Contracts.Accounts.Enums
 {
-    public enum TransferDirection
+    public enum TransferType
     {
-        FromSavingsAccount,
-        ToSavingsAccount
+        CurrentToCurrent,
+        SavingsToCurrent,
+        CurrentToSavings,
     }
 }

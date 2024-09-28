@@ -4,4 +4,4 @@ public record CreateInstantSavingsAccountCommand(
     string MsgId,
     string ExternalRef,
     decimal InterestRate,
-    string PlatformId) : ICommandRequest;
+    string CurrentAccountId) : ICommandRequest;

@@ -11,11 +11,11 @@ namespace SavingsPlatform.Accounts.Current;
 internal class CurrentAccountRepository : MartenStateEntryRepositoryBase<CurrentAccountState, CurrentAccountDto>
 {
     public CurrentAccountRepository(
-        IDocumentSession docSession,
+        ISessionFactory docSessionFactory,
         IStateMapper<AggregateState<CurrentAccountDto>, CurrentAccountState> mapper,
         IEventPublishingService eventPublishingService,
         ILogger<MartenStateEntryRepositoryBase<CurrentAccountState, CurrentAccountDto>> logger)
-        : base(docSession, mapper, eventPublishingService, logger)
+        : base(docSessionFactory, mapper, eventPublishingService, logger)
     { }
 }
 

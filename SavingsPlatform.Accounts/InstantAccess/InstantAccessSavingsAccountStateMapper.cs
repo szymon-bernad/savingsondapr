@@ -24,7 +24,7 @@ public class InstantAccessSavingsAccountStateMapper : IStateMapper<AggregateStat
             OpenedOn = state.Data.OpenedOn,
             ActivatedOn = state.Data.ActivatedOn,
             TotalBalance = state.Data!.TotalBalance,
-            PlatformId = state.Data.PlatformId ?? string.Empty,
+            CurrentAccountId = state.Data.CurrentAccountId,
             HasUnpublishedEvents = state.HasUnpublishedEvents,
             InterestApplicationDueOn = state.Data.InterestApplicationDueOn,
             UnpublishedEvents = unpubEvents
@@ -44,7 +44,7 @@ public class InstantAccessSavingsAccountStateMapper : IStateMapper<AggregateStat
                 dto.InterestRate,
                 dto.TotalBalance,
                 dto.AccruedInterest,
-                dto.PlatformId,
+                dto.CurrentAccountId,
                 dto.InterestApplicationFrequency,
                 dto.InterestApplicationDueOn),
             HasUnpublishedEvents = dto.HasUnpublishedEvents,

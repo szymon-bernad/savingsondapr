@@ -84,7 +84,7 @@ namespace SavingsPlatform.Common.Accounts
                 DateTime.UtcNow,
                 typeof(AccountCredited)!.Name,
                 _state.Type,
-                _state.PlatformId));
+                _state.CurrentAccountId));
 
             return eventsToPublish;
         }
@@ -119,7 +119,7 @@ namespace SavingsPlatform.Common.Accounts
                 DateTime.UtcNow,
                 typeof(AccountDebited)!.Name,
                 _state.Type,
-                _state.PlatformId)];
+                _state.CurrentAccountId)];
         }
 
         public async Task TryUpdateAsync(string? msgId)

@@ -7,11 +7,9 @@ namespace SavingsPlatform.Common.Interfaces
     {
         public Task InitiateTransferAsync(DepositTransferData data);
 
-        public Task HandleDebitedEventAsync();
+        public Task HandleDebitedEventAsync(string accountId);
 
-        public Task HandleCreditedEventAsync();
-
-        public Task HandleStartAfterAccountCreation(string savingsAccountId, string settlementAccountId);
+        public Task HandleCreditedEventAsync(string accountId);
 
     }
 }

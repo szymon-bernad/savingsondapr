@@ -7,5 +7,4 @@ public record CurrentAccountDto(
     string ExternalRef,
     DateTime? OpenedOn,
     decimal TotalBalance,
-    string? PlatformId,
     AccountType Type = AccountType.CurrentAccount);

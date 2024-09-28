@@ -9,10 +9,8 @@ namespace SavingsPlatform.Contracts.Accounts.Models
     public enum DepositTransferStatus
     {
         New,
-        AwaitingAccountCreation,
         DebtorDebited,
         BeneficiaryCredited,
-        BeneficiaryDebited,
         Completed
     }
 }

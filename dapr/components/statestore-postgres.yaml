@@ -1,0 +1,20 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: statestore-postgres
+  namespace: savings
+spec:
+  type: state.postgresql
+  version: v1
+  metadata:
+  # Connection string
+  - name: connectionString
+    value: "host=postgres user=postgres password=example port=5432 connect_timeout=65 database=savings-store"
+  # Timeout for database operations, in seconds (optional)
+  - name: timeoutInSeconds
+    value: 60
+  # Uncomment this if you wish to use PostgreSQL as a state store for actors (optional)
+  - name: actorStateStore
+    value: "true"
+scopes:
+- dapr-savings-api

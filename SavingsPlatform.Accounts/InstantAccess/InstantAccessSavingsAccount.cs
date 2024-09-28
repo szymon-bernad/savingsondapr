@@ -42,16 +42,14 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
 
         var eventsToPub = new Collection<object>
         {
-            new AccountCreated
-            {
-                Id = Guid.NewGuid().ToString(),
-                ExternalRef = request.ExternalRef,
-                AccountId = accountId,
-                AccountType = AccountType.SavingsAccount,
-                Timestamp = DateTime.UtcNow,
-                EventType = typeof(AccountCreated).Name,
-                PlatformId = request.PlatformId,
-            }
+            new AccountCreated(
+                Guid.NewGuid().ToString(),
+                request.ExternalRef,
+                accountId,
+                request.CurrentAccountId,
+                AccountType.SavingsAccount,
+                DateTime.UtcNow,
+                typeof(AccountCreated).Name)
         };
 
         var state = new InstantAccessSavingsAccountState
@@ -62,7 +60,7 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
             InterestRate = request.InterestRate,
             TotalBalance = 0m,
             AccruedInterest = 0m,
-            PlatformId = request.PlatformId,
+            CurrentAccountId = request.CurrentAccountId,
             HasUnpublishedEvents = true,
             UnpublishedEvents = eventsToPub,
         };
@@ -101,7 +99,7 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
                     _state.InterestRate,
                     DateTime.UtcNow,
                     typeof(InstantAccessSavingsAccountActivated)!.Name,
-                    _state.PlatformId));
+                    _state.CurrentAccountId));
         }
 
         _state = _state with
@@ -171,7 +169,7 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
                         _state.InterestRate,
                         DateTime.UtcNow,
                         typeof(AccountInterestAccrued)!.Name,
-                        _state.PlatformId));
+                        _state.CurrentAccountId));
 
                 _state = _state with
                 {
@@ -216,7 +214,7 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
                     _state.InterestRate,
                     DateTime.UtcNow,
                     typeof(AccountInterestAccrued)!.Name,
-                    _state.PlatformId));
+                    _state.CurrentAccountId));
 
             _state = _state with
             {

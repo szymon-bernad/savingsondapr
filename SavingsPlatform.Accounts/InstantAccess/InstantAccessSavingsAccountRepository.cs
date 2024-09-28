@@ -11,7 +11,7 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
     internal class InstantAccessSavingsAccountRepository : MartenStateEntryRepositoryBase<InstantAccessSavingsAccountState, InstantAccessSavingsAccountDto>
     {
         public InstantAccessSavingsAccountRepository(
-            IDocumentSession docSession,
+            ISessionFactory docSession,
             IStateMapper<AggregateState<InstantAccessSavingsAccountDto>, InstantAccessSavingsAccountState> mapper,
             IEventPublishingService eventPublishingService,
             ILogger<MartenStateEntryRepositoryBase<InstantAccessSavingsAccountState, InstantAccessSavingsAccountDto>> logger)

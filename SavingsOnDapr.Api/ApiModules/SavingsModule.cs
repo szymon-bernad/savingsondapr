@@ -1,9 +1,12 @@
 ﻿using Carter;
+using Microsoft.JSInterop;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
+using SavingsPlatform.Accounts.Current.Models;
 using SavingsPlatform.Common.Interfaces;
 using SavingsPlatform.Common.Services;
 using SavingsPlatform.Contracts.Accounts.Commands;
+using SavingsPlatform.Contracts.Accounts.Enums;
 using SavingsPlatform.Contracts.Accounts.Requests;
 
 namespace SavingsOnDapr.Api.ApiModules;
@@ -20,17 +23,24 @@ public class SavingsModule : ICarterModule
 
         app.MapPost("/api/savings/savings-accounts",
             async (IEventPublishingService publishingService,
-                    IStateEntryRepository<InstantAccessSavingsAccountState> repo,
+                   IStateEntryRepository<InstantAccessSavingsAccountState> iasaRepo,
+                   IStateEntryRepository<CurrentAccountState> caRepo,
                    CreateSavingsAccount request) =>
             {
-                var result = await repo.QueryAccountsByKeyAsync(new string[] { "data.externalRef" }, new string[] { request.ExternalRef });
+                var result = await iasaRepo.QueryAccountsByKeyAsync(["data.externalRef"], [request.ExternalRef]);
 
                 if(result.Any())
                 {
-                    return Results.BadRequest("Account already exists");
+                    return Results.BadRequest("Savings Account already exists");
                 }
 
-                await publishingService.PublishCommand(new CreateInstantSavingsAccountCommand(Guid.NewGuid().ToString(), request.ExternalRef, request.InterestRate, request.PlatformId));
+                var caResult = await caRepo.QueryAccountsByKeyAsync(["data.externalRef"], [request.CurrentAccountRef]);
+                if(!caResult.Any())
+                {
+                    return Results.BadRequest("Current Account not found");
+                }
+
+                await publishingService.PublishCommand(new CreateInstantSavingsAccountCommand(Guid.NewGuid().ToString(), request.ExternalRef, request.InterestRate, caResult.First().Key));
 
                 return Results.Accepted($"/api/savings/savings-account/{request.ExternalRef}");
             }).WithTags(["savings"]);
@@ -40,9 +50,8 @@ public class SavingsModule : ICarterModule
                     CreditAccount request) =>
             {
                 var cmdId = request.MsgId ?? Guid.NewGuid().ToString();
-                await publishingService.PublishCommand(
-                    new CreditAccountCommand(cmdId, request.ExternalRef, request.Amount, DateTime.UtcNow, request.TransferRef));
-
+                var transferCmd = new TransferDepositCommand(request.ExternalRef, request.TransactionDate, request.Amount, TransferType.CurrentToSavings, cmdId, cmdId);
+                await publishingService.PublishCommand(transferCmd);
                 return Results.Accepted($"/api/platform/savings-account/command/{cmdId}");
             }).WithTags(["savings"]);
 
@@ -51,9 +60,8 @@ public class SavingsModule : ICarterModule
                     DebitAccount request) =>
             {
                 var cmdId = request.MsgId ?? Guid.NewGuid().ToString();
-                await publishingService.PublishCommand(
-                    new DebitAccountCommand(cmdId, request.ExternalRef, request.Amount, DateTime.UtcNow, request.TransferRef));
-
+                var transferCmd = new TransferDepositCommand(request.ExternalRef, request.TransactionDate, request.Amount, TransferType.SavingsToCurrent, cmdId, cmdId);
+                await publishingService.PublishCommand(transferCmd);
                 return Results.Accepted($"/api/platform/savings-account/command/{cmdId}");
             }).WithTags(["savings"]);
     }

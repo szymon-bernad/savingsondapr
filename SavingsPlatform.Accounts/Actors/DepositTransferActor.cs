@@ -10,7 +10,6 @@ using SavingsPlatform.Contracts.Accounts.Requests;
 using SavingsPlatform.Accounts.Current;
 using SavingsPlatform.Accounts.Current.Models;
 using SavingsPlatform.Contracts.Accounts.Commands;
-using static Google.Rpc.Context.AttributeContext.Types;
 
 namespace SavingsPlatform.Accounts.Actors;
 
@@ -18,7 +17,6 @@ public class DepositTransferActor : Actor, IDepositTransferActor, IRemindable
 {
     private readonly IAggregateRootFactory<CurrentAccount, CurrentAccountState> _currentFactory;
     private readonly IAggregateRootFactory<InstantAccessSavingsAccount, InstantAccessSavingsAccountState> _iasaFactory;
-    private readonly ILogger<DepositTransferActor> _logger;
     private readonly IEventPublishingService _eventPublishingService;
 
     private const string TransferAttempt = nameof(TransferAttempt);
@@ -33,20 +31,18 @@ public class DepositTransferActor : Actor, IDepositTransferActor, IRemindable
     {
         _currentFactory = currentFactory;
         _iasaFactory = iasaFactory;
-        _logger = logger;
         _eventPublishingService = eventPublishingService;
     }
 
-    public async Task HandleCreditedEventAsync(string accountId)
+    public async Task InitiateTransferAsync(DepositTransferData data)
     {
-        var transferData = await StateManager.GetStateAsync<DepositTransferData>(DepositTransferState);
-        if (!accountId.Equals(transferData.BeneficiaryAccountId, StringComparison.Ordinal) ||
-            transferData.Status != DepositTransferStatus.BeneficiaryCredited)
+        if (data.Status != DepositTransferStatus.New)
         {
+            await UnregisterReminderAsync(TransferAttempt);
             return;
         }
-        transferData = transferData with { Status = DepositTransferStatus.Completed };
-        await StateManager.SetStateAsync(DepositTransferState, transferData);
+
+        await StartTransfer(data);
     }
 
     public async Task HandleDebitedEventAsync(string accountId)
@@ -61,17 +57,17 @@ public class DepositTransferActor : Actor, IDepositTransferActor, IRemindable
         var creditTask = transferData.Direction switch
         {
             TransferType.CurrentToSavings => Task.Run(async () =>
-                    {
-                        var instance = await _iasaFactory.GetInstanceAsync(transferData.BeneficiaryAccountId);
-                        await _eventPublishingService.PublishCommand(
-                        new CreditAccountCommand(
-                                $"{transferData.TransferId}-Credit",
-                            instance.State.ExternalRef,
-                            transferData.Amount,
-                            DateTime.UtcNow,
-                            AccountType.SavingsAccount,
-                            transferData.TransferId));
-                    }),
+            {
+                var instance = await _iasaFactory.GetInstanceAsync(transferData.BeneficiaryAccountId);
+                await _eventPublishingService.PublishCommand(
+                new CreditAccountCommand(
+                        $"{transferData.TransferId}-Credit",
+                    instance.State.ExternalRef,
+                    transferData.Amount,
+                    DateTime.UtcNow,
+                    AccountType.SavingsAccount,
+                    transferData.TransferId));
+            }),
             TransferType.SavingsToCurrent => Task.Run(async () =>
             {
                 var instance = await _currentFactory.GetInstanceAsync(transferData.BeneficiaryAccountId);
@@ -93,15 +89,17 @@ public class DepositTransferActor : Actor, IDepositTransferActor, IRemindable
         await StateManager.SetStateAsync(DepositTransferState, transferData);
     }
 
-    public async Task InitiateTransferAsync(DepositTransferData data)
+
+    public async Task HandleCreditedEventAsync(string accountId)
     {
-        if (data.Status != DepositTransferStatus.New)
+        var transferData = await StateManager.GetStateAsync<DepositTransferData>(DepositTransferState);
+        if (!accountId.Equals(transferData.BeneficiaryAccountId, StringComparison.Ordinal) ||
+            transferData.Status != DepositTransferStatus.BeneficiaryCredited)
         {
-            await UnregisterReminderAsync(TransferAttempt);
             return;
         }
-
-        await StartTransfer(data);
+        transferData = transferData with { Status = DepositTransferStatus.Completed };
+        await StateManager.SetStateAsync(DepositTransferState, transferData);
     }
 
     private Task StartTransfer(DepositTransferData transferData)

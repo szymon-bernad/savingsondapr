@@ -20,9 +20,11 @@ public static class SavingsPlatformAccountsDIExt
     {
         services.AddTransient<IStateMapper<AggregateState<InstantAccessSavingsAccountDto>, InstantAccessSavingsAccountState>, InstantAccessSavingsAccountStateMapper>()
             .AddScoped<IStateEntryRepository<InstantAccessSavingsAccountState>, InstantAccessSavingsAccountRepository>()
+            .AddScoped<IStateEntryQueryHandler<InstantAccessSavingsAccountState>, InstantAccessSavingsAccountRepository>()
             .AddTransient<IAggregateRootFactory<InstantAccessSavingsAccount, InstantAccessSavingsAccountState>, InstantAccessSavingsAccountFactory>()
             .AddTransient<IStateMapper<AggregateState<CurrentAccountDto>, CurrentAccountState>, CurrentAccountStateMapper>()
             .AddScoped<IStateEntryRepository<CurrentAccountState>, CurrentAccountRepository>()
+            .AddScoped<IStateEntryQueryHandler<CurrentAccountState>, CurrentAccountRepository>()
             .AddTransient<IAggregateRootFactory<CurrentAccount, CurrentAccountState>, CurrentAccountFactory>()
             .AddScoped<IEventPublishingService, DaprEventPublishingService>()
             .AddSingleton<IThreadSynchronizer, ThreadSynchronizer>()

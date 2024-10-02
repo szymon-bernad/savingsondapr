@@ -15,6 +15,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SavingsOnDapr.EventStore", 
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{644655B8-DAB4-4276-B137-63BDBD864496}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{6F200D4D-9DFD-4B5A-BF2A-68D19F5A7B6F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SavingsPlatform.Accounts.UnitTests", "..\SavingsPlatform.Accounts.UnitTests\SavingsPlatform.Accounts.UnitTests.csproj", "{230524F1-56EA-4B65-936E-6DA09E020445}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,9 +49,16 @@ Global
 		{644655B8-DAB4-4276-B137-63BDBD864496}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{644655B8-DAB4-4276-B137-63BDBD864496}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{644655B8-DAB4-4276-B137-63BDBD864496}.Release|Any CPU.Build.0 = Release|Any CPU
+		{230524F1-56EA-4B65-936E-6DA09E020445}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{230524F1-56EA-4B65-936E-6DA09E020445}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{230524F1-56EA-4B65-936E-6DA09E020445}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{230524F1-56EA-4B65-936E-6DA09E020445}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{230524F1-56EA-4B65-936E-6DA09E020445} = {6F200D4D-9DFD-4B5A-BF2A-68D19F5A7B6F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EE62B92C-B3EF-4290-AD4D-4F4001EE0299}

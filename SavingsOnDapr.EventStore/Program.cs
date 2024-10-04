@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Http.Json;
 using Carter;
 using Marten.Events;
 using SavingsOnDapr.EventStore.Store;
+using Microsoft.Extensions.Options;
+using SavingsPlatform.Contracts.Accounts.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +22,7 @@ builder.Services.AddMarten(
         opts.Connection(builder.Configuration.GetConnectionString("MartenStore") ??
             throw new ArgumentNullException("MartenStore"));
 
+        opts.Schema.For<EventStatusEntry>().UseIdentityKey();
         opts.AutoCreateSchemaObjects = AutoCreate.All;
         opts.Events.AppendMode = EventAppendMode.Quick;
         opts.Events.StreamIdentity = StreamIdentity.AsString;

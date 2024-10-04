@@ -1,6 +1,7 @@
 ﻿using Marten;
 using Marten.Events;
 using SavingsPlatform.Contracts.Accounts.Interfaces;
+using SavingsPlatform.Contracts.Accounts.Models;
 
 namespace SavingsOnDapr.EventStore.Store;
 
@@ -16,18 +17,28 @@ public class AccountHierarchyEventStore
     {
         using var session = _documentStore.LightweightSession();
 
-        var streamState = await session.Events.FetchStreamStateAsync(streamId);
-        if (streamState is null)
-        {
-            session.Events.StartStream(streamId, events);
-        }
-        else
-        {
-            await session.Events.AppendExclusive(streamId);
-            session.Events.Append(streamId, streamState.Version + events.Count(), events);
-        }
+        var processedEventsTasks = events.Select((e) => session.LoadAsync<EventStatusEntry>(e.Id));
+        var processedEvents = (await Task.WhenAll(processedEventsTasks)).Where(r => r is not null).Select(e => e!.EventId);
 
-        await session.SaveChangesAsync(cancellationToken);
+        var newEvents = events.ExceptBy(processedEvents, e => e.Id);
+
+        if (newEvents.Any())
+        {
+            var streamState = await session.Events.FetchStreamStateAsync(streamId, cancellationToken);
+            if (streamState is null)
+            {
+                session.Events.StartStream(streamId, newEvents);
+            }
+            else
+            {
+                await session.Events.AppendExclusive(streamId);
+                session.Events.Append(streamId, streamState.Version + newEvents.Count(), newEvents);
+            }
+
+            session.Store<EventStatusEntry>(newEvents.Select(e => new EventStatusEntry { EventId = e.Id }));
+
+            await session.SaveChangesAsync(cancellationToken);
+        }
     }
 
     public async Task<IEnumerable<Marten.Events.IEvent>> FetchEventsAsync(string streamId)

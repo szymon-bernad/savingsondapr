@@ -48,7 +48,7 @@ namespace SavingsPlatform.Common.Services
                     var jsonObject = e as JsonObject;
                     if (jsonObject is not null)
                     {
-                        var evtType = jsonObject["EventType"]?.GetValue<string>().ToLower();
+                        var evtType = jsonObject["EvtType"]?.GetValue<string>().ToLower();
                         if (!string.IsNullOrEmpty(evtType))
                         {
                             return _daprClient.PublishEventAsync(PubSubName, evtType, jsonObject);
@@ -56,7 +56,7 @@ namespace SavingsPlatform.Common.Services
                     }
                     else
                     {
-                        var evtType = e.GetType().GetProperty("EventType")?.GetValue(e)?.ToString()?.ToLower();
+                        var evtType = e.GetType().GetProperty("EvtType")?.GetValue(e)?.ToString()?.ToLower();
                         if (!string.IsNullOrEmpty(evtType))
                         {
                             return _daprClient.PublishEventAsync(PubSubName, evtType, e);

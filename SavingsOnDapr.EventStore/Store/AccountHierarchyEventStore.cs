@@ -47,6 +47,26 @@ public class AccountHierarchyEventStore(IDocumentStore documentStore)
         return events;
     }
 
+    public async Task<AccountHierarchySummaryDto?> GetAccountHierarchySummary(string streamId, DateTime? fromDate, DateTime? toDate)
+    {
+        using var session = _documentStore.LightweightSession();
+
+        var summary = await session.Events.AggregateStreamAsync(streamId, 0, null, new AccountHierarchySummary(fromDate, toDate));
+
+        if (summary is not null)
+        {
+            return new AccountHierarchySummaryDto(
+                fromDate, toDate, streamId, 
+                summary.TotalAmountTransferredToSavings,
+                summary.TotalAmountWithdrawnFromSavings,
+                summary.TotalAmountOfNewDeposits,
+                summary.TotalAmountOfWithdrawals,
+                summary.TotalCountOfDepositTransfers);
+        }
+
+        return null;
+    }
+
     private async Task<IEnumerable<ISavingsEvent>> DeduplicateEvents(
         IDocumentSession session,
         IEnumerable<ISavingsEvent> events,

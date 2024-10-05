@@ -1,5 +1,6 @@
 ﻿using Carter;
 using Dapr;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using SavingsOnDapr.EventStore.Store;
 using SavingsPlatform.Contracts.Accounts.Events;
@@ -48,6 +49,15 @@ public class EventsModule : ICarterModule
 
                 return Results.Ok(events.Select(e => e.Data));
             });
+
+        app.MapGet("v1/events/accounts-summary/{id}",
+            async (AccountHierarchyEventStore store, string id, [FromQuery]DateTime? fromDate, [FromQuery]DateTime? toDate) =>
+            {
+                var result = await store.GetAccountHierarchySummary(id, fromDate, toDate);
+
+                return Results.Ok(result);
+            });
+
 
         app.MapGet("/healthz", () => Results.Ok());
 

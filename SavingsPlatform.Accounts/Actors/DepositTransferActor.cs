@@ -1,14 +1,9 @@
 ﻿using Dapr.Actors.Runtime;
-using Microsoft.Extensions.Logging;
 using SavingsPlatform.Accounts.Actors.Services;
-using SavingsPlatform.Accounts.Aggregates.InstantAccess;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
-using SavingsPlatform.Accounts.Current;
 using SavingsPlatform.Accounts.Current.Models;
 using SavingsPlatform.Common.Interfaces;
 using SavingsPlatform.Common.Services;
-using SavingsPlatform.Contracts.Accounts.Commands;
-using SavingsPlatform.Contracts.Accounts.Enums;
 using SavingsPlatform.Contracts.Accounts.Models;
 
 namespace SavingsPlatform.Accounts.Actors;
@@ -36,12 +31,14 @@ public class DepositTransferActor : Actor, IDepositTransferActor, IRemindable
 
         var task = result switch
         {
-            DepositTransferService.TransferAttemptUnregister => UnregisterReminderAsync(DepositTransferService.TransferAttempt),
-            DepositTransferService.TransferAttemptRegister => RegisterReminderAsync(
-                                        DepositTransferService.TransferAttempt,
-                                        null,
-                                        TimeSpan.FromMinutes(2),
-                                        TimeSpan.FromMinutes(2)),
+            DepositTransferService.TransferAttemptUnregister => 
+                    UnregisterReminderAsync(DepositTransferService.TransferAttempt),
+            DepositTransferService.TransferAttemptRegister => 
+                    RegisterReminderAsync(
+                        DepositTransferService.TransferAttempt,
+                        null,
+                        TimeSpan.FromMinutes(2),
+                        TimeSpan.FromMinutes(2)),
             _ => Task.CompletedTask
         };
 
@@ -52,7 +49,6 @@ public class DepositTransferActor : Actor, IDepositTransferActor, IRemindable
     {
         return _depositTransferService.HandleDebitedEventAsync(accountId);
     }
-
 
     public Task HandleCreditedEventAsync(string accountId)
     {

@@ -15,7 +15,7 @@ public class SavingsModule : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/savings/savings-account/{refid}", async (string refid, IStateEntryRepository<InstantAccessSavingsAccountState> repo) =>
+        app.MapGet("/api/savings/savings-account/{refid}", async (string refid, IStateEntryQueryHandler<InstantAccessSavingsAccountState> repo) =>
         {
             var result = await repo.QueryAccountsByKeyAsync(new string[] { "data.externalRef" }, new string[] { refid });
             return Results.Ok(result);
@@ -23,8 +23,8 @@ public class SavingsModule : ICarterModule
 
         app.MapPost("/api/savings/savings-accounts",
             async (IEventPublishingService publishingService,
-                   IStateEntryRepository<InstantAccessSavingsAccountState> iasaRepo,
-                   IStateEntryRepository<CurrentAccountState> caRepo,
+                   IStateEntryQueryHandler<InstantAccessSavingsAccountState> iasaRepo,
+                   IStateEntryQueryHandler<CurrentAccountState> caRepo,
                    CreateSavingsAccount request) =>
             {
                 var result = await iasaRepo.QueryAccountsByKeyAsync(["data.externalRef"], [request.ExternalRef]);

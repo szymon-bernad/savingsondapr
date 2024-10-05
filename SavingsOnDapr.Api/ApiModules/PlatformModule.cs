@@ -89,7 +89,7 @@ public class PlatformModule : ICarterModule
 
         app.MapPost("/api/platform/publish-events",
             async (
-                   IStateEntryRepository<InstantAccessSavingsAccountState> iasaRepository,
+                   IStateEntryQueryHandler<InstantAccessSavingsAccountState> iasaRepository,
                    IMediator mediator
                    ) =>
         {

@@ -83,7 +83,6 @@ public class DepositTransferServiceTests
         TransferType transferDir)
     {
         // Arrange
-
         var depositTransfer = new DepositTransferData
         {
             TransferId = "transferId",
@@ -96,9 +95,9 @@ public class DepositTransferServiceTests
         };
 
         var (actorStateMngrMock, currentAccountQueryHandler, iasaQueryHandler, eventPublishingServiceMock) = GetMockSetup(depositTransfer, 1500);
-
         var sut = new DepositTransferService(actorStateMngrMock, currentAccountQueryHandler, iasaQueryHandler, eventPublishingServiceMock);
-        // Assert
+        
+        // Act & Assert
         if (transferDir == TransferType.CurrentToSavings)
         {
             var result = await sut.InitiateTransferAsync(depositTransfer);

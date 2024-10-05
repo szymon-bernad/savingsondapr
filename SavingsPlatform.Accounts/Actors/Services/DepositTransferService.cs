@@ -10,19 +10,24 @@ using SavingsPlatform.Contracts.Accounts.Models;
 namespace SavingsPlatform.Accounts.Actors.Services;
 
 public class DepositTransferService(
-    IActorStateManager _actorStateManager,
-    IStateEntryQueryHandler<CurrentAccountState> _currentAccountQueryHandler,
-    IStateEntryQueryHandler<InstantAccessSavingsAccountState> _iasaQueryHandler,
-    IEventPublishingService _eventPublishingService)
+    IActorStateManager actorStateManager,
+    IStateEntryQueryHandler<CurrentAccountState> currentAccountQueryHandler,
+    IStateEntryQueryHandler<InstantAccessSavingsAccountState> iasaQueryHandler,
+    IEventPublishingService eventPublishingService)
 {
     public const string TransferAttempt = nameof(TransferAttempt);
     public const string DepositTransferState = nameof(DepositTransferState);
     public const string TransferAttemptRegister = nameof(TransferAttemptRegister);
     public const string TransferAttemptUnregister = nameof(TransferAttemptUnregister);
 
+    private readonly IActorStateManager _actorStateManager = actorStateManager;
+    private readonly IStateEntryQueryHandler<CurrentAccountState> _currentAccountQueryHandler = currentAccountQueryHandler;
+    private readonly IStateEntryQueryHandler<InstantAccessSavingsAccountState> _iasaQueryHandler = iasaQueryHandler;
+    private readonly IEventPublishingService _eventPublishingService = eventPublishingService;
+
     public async Task<string?> InitiateTransferAsync(DepositTransferData? data)
     {
-        data ??= await _actorStateManager.GetStateAsync<DepositTransferData>(DepositTransferService.DepositTransferState);
+        data ??= await actorStateManager.GetStateAsync<DepositTransferData>(DepositTransferService.DepositTransferState);
 
         if (data is not null)
         {
@@ -51,7 +56,7 @@ public class DepositTransferService(
 
     public async Task HandleDebitedEventAsync(string accountId)
     {
-        var transferData = await _actorStateManager.GetStateAsync<DepositTransferData>(DepositTransferState);
+        var transferData = await actorStateManager.GetStateAsync<DepositTransferData>(DepositTransferState);
         if (!accountId.Equals(transferData.DebtorAccountId, StringComparison.Ordinal) ||
             transferData.Status != DepositTransferStatus.DebtorDebited)
         {
@@ -62,8 +67,8 @@ public class DepositTransferService(
         {
             TransferType.CurrentToSavings => Task.Run(async () =>
             {
-                var instance = await _iasaQueryHandler.GetAccountAsync(transferData.BeneficiaryAccountId);
-                await _eventPublishingService.PublishCommand(
+                var instance = await iasaQueryHandler.GetAccountAsync(transferData.BeneficiaryAccountId);
+                await eventPublishingService.PublishCommand(
                 new CreditAccountCommand(
                         $"{transferData.TransferId}-Credit",
                     instance.ExternalRef,
@@ -74,8 +79,8 @@ public class DepositTransferService(
             }),
             TransferType.SavingsToCurrent => Task.Run(async () =>
             {
-                var instance = await _currentAccountQueryHandler.GetAccountAsync(transferData.BeneficiaryAccountId);
-                await _eventPublishingService.PublishCommand(
+                var instance = await currentAccountQueryHandler.GetAccountAsync(transferData.BeneficiaryAccountId);
+                await eventPublishingService.PublishCommand(
                     new CreditAccountCommand(
                         $"{transferData.TransferId}-Credit",
                         instance.ExternalRef,
@@ -90,28 +95,26 @@ public class DepositTransferService(
 
         await creditTask;
         transferData = transferData with { Status = DepositTransferStatus.BeneficiaryCredited };
-        await _actorStateManager.SetStateAsync(DepositTransferState, transferData);
+        await actorStateManager.SetStateAsync(DepositTransferState, transferData);
     }
 
 
     public async Task HandleCreditedEventAsync(string accountId)
     {
-        var transferData = await _actorStateManager.GetStateAsync<DepositTransferData>(DepositTransferState);
+        var transferData = await actorStateManager.GetStateAsync<DepositTransferData>(DepositTransferState);
         if (!accountId.Equals(transferData.BeneficiaryAccountId, StringComparison.Ordinal) ||
             transferData.Status != DepositTransferStatus.BeneficiaryCredited)
         {
             return;
         }
         transferData = transferData with { Status = DepositTransferStatus.Completed };
-        await _actorStateManager.SetStateAsync(DepositTransferState, transferData);
+        await actorStateManager.SetStateAsync(DepositTransferState, transferData);
     }
-
-
 
     private async Task<string?> StartTransferCurrentToSavings(DepositTransferData transferData)
     {
         var registerReminder = false;
-        var currentAccount = (await _currentAccountQueryHandler.GetAccountAsync(transferData.DebtorAccountId))
+        var currentAccount = (await currentAccountQueryHandler.GetAccountAsync(transferData.DebtorAccountId))
             ?? throw new InvalidOperationException($"Cannot find an account by {nameof(transferData.DebtorAccountId)}.");
 
         if (currentAccount.TotalBalance < transferData.Amount)
@@ -120,7 +123,7 @@ public class DepositTransferService(
         }
         else
         {
-            await _eventPublishingService.PublishCommand(
+            await eventPublishingService.PublishCommand(
                 new DebitAccountCommand(
                         $"{transferData.TransferId}-Debit",
                     currentAccount.ExternalRef,
@@ -131,7 +134,7 @@ public class DepositTransferService(
 
             transferData = transferData with { Status = DepositTransferStatus.DebtorDebited };
 
-            await _actorStateManager.SetStateAsync(DepositTransferState, transferData);
+            await actorStateManager.SetStateAsync(DepositTransferState, transferData);
             if (!transferData.IsFirstAttempt)
             {
                 return TransferAttemptUnregister;
@@ -142,7 +145,7 @@ public class DepositTransferService(
         {
             transferData = transferData with { IsFirstAttempt = false };
 
-            await _actorStateManager.SetStateAsync(DepositTransferState, transferData);
+            await actorStateManager.SetStateAsync(DepositTransferState, transferData);
 
             return TransferAttemptRegister;
         }
@@ -152,7 +155,7 @@ public class DepositTransferService(
 
     private async Task<string?> StartTransferSavingsToCurrent(DepositTransferData transferData)
     {
-        var savingsAccount = await _iasaQueryHandler.GetAccountAsync(transferData.DebtorAccountId)
+        var savingsAccount = await iasaQueryHandler.GetAccountAsync(transferData.DebtorAccountId)
             ?? throw new InvalidOperationException($"Cannot find an account by {nameof(transferData.DebtorAccountId)}.");
 
         if (savingsAccount.TotalBalance < transferData.Amount)
@@ -161,7 +164,7 @@ public class DepositTransferService(
         }
         else
         {
-            await _eventPublishingService.PublishCommand(
+            await eventPublishingService.PublishCommand(
                 new DebitAccountCommand(
                     $"{transferData.TransferId}-Debit",
                     savingsAccount.ExternalRef!,
@@ -171,7 +174,7 @@ public class DepositTransferService(
                     transferData.TransferId));
 
             transferData = transferData with { Status = DepositTransferStatus.DebtorDebited };
-            await _actorStateManager.SetStateAsync(DepositTransferState, transferData);
+            await actorStateManager.SetStateAsync(DepositTransferState, transferData);
         }
 
         return null;

@@ -36,3 +36,28 @@ services:
       - POSTGRES_PASSWORD=example
       - POSTGRES_USER=postgres
       - POSTGRES_DB=savings-store
+
+  savingsondapr.eventstore:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - DAPR_HTTP_PORT=3606
+      - ConnectionStrings__MartenStore=host='postgres';username='postgres';password='example';port='5432';database='event-store'
+      - NAMESPACE=savingsplatform
+    ports:
+      - "5163:8080"
+
+  savingsondapr.eventstore-dapr:
+    command: ["./daprd",
+      "--app-id", "dapr-savings-evt",
+      "--app-port", "8080",
+      "--dapr-http-port", "3606",
+      "--enable-app-health-check",
+      "--app-health-check-path", "/healthz",
+      "--placement-host-address", "placement:50000",
+      "--resources-path", "/components",
+      "-config", "/configuration/config.yaml"
+      ]
+    volumes:
+      - "./dapr/components/:/components"
+      - "./dapr/configuration:/configuration"

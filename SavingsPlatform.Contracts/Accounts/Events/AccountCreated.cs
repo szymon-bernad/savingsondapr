@@ -10,6 +10,6 @@ namespace SavingsPlatform.Contracts.Accounts.Events
         string AccountId, 
         AccountType AccountType, 
         DateTime Timestamp, 
-        string EventType) : IEvent;
+        string EvtType) : IEvent;
 
 }

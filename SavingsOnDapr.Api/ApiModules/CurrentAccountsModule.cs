@@ -13,7 +13,7 @@ public class CurrentAccountsModule : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/accounts/{refid}", async (string refid, IStateEntryRepository<CurrentAccountState> repo) =>
+        app.MapGet("/api/accounts/{refid}", async (string refid, IStateEntryQueryHandler<CurrentAccountState> repo) =>
         {
             var result = await repo.QueryAccountsByKeyAsync(["data.externalRef"], [refid]);
             return Results.Ok(result);
@@ -21,7 +21,7 @@ public class CurrentAccountsModule : ICarterModule
 
         app.MapPost("/api/accounts",
             async (IEventPublishingService publishingService,
-                   IStateEntryRepository<CurrentAccountState> caRepo,
+                   IStateEntryQueryHandler<CurrentAccountState> caRepo,
                    CreateCurrentAccount request) =>
             {
 

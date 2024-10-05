@@ -4,7 +4,7 @@
     {
         string Id { get; }
         DateTime Timestamp { get; }
-        string EventType { get; }
+        string EvtType { get; }
         string CurrentAccountId { get; }
     }
 }

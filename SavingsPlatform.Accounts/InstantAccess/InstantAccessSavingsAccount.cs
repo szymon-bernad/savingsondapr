@@ -45,8 +45,8 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
             new AccountCreated(
                 Guid.NewGuid().ToString(),
                 request.ExternalRef,
-                accountId,
                 request.CurrentAccountId,
+                accountId,
                 AccountType.SavingsAccount,
                 DateTime.UtcNow,
                 typeof(AccountCreated).Name)

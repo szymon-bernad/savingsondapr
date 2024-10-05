@@ -46,3 +46,22 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  savingsondapr.eventstore:
+    build:
+      context: .
+      dockerfile: ./SavingsOnDapr.EventStore/Dockerfile
+    depends_on:
+      - postgres
+
+  savingsondapr.eventstore-dapr:
+    image: "daprio/daprd:1.14.2"
+    network_mode: "service:savingsondapr.eventstore"
+    depends_on:
+      postgres:
+        condition: service_started
+      savingsondapr.eventstore:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
+

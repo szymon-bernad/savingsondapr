@@ -3,6 +3,7 @@ using Marten.Services;
 using Microsoft.Extensions.Logging;
 using SavingsPlatform.Common.Helpers;
 using SavingsPlatform.Common.Interfaces;
+using SavingsPlatform.Common.Repositories.Enums;
 using SavingsPlatform.Common.Services;
 using SavingsPlatform.Contracts.Accounts;
 using System.Text;
@@ -39,11 +40,11 @@ namespace SavingsPlatform.Common.Repositories.Marten
             return TryUpsertAccountAsync(account, msgEntry);
         }
 
-        public async Task<ICollection<TEntry>> QueryAccountsByKeyAsync(string[] keyNames, string[] keyValue, bool isKeyValueAString = true)
+        public async Task<ICollection<TEntry>> QueryAccountsByKeyAsync(string[] keyNames, object[] keyValues)
         {
             _logger.LogInformation($"Querying accounts by key: {string.Join(", ", keyNames)}.");
 
-            var result = await QueryAggregateStateByKeysAsync(keyNames, keyValue, isKeyValueAString);
+            var result = await QueryAggregateStateByKeysAsync(keyNames, keyValues);
 
             if (result?.Any() ?? false)
             {
@@ -56,7 +57,7 @@ namespace SavingsPlatform.Common.Repositories.Marten
 
                 return mappedData;
             }
-            
+
             return Enumerable.Empty<TEntry>().ToList();
         }
 
@@ -80,7 +81,7 @@ namespace SavingsPlatform.Common.Repositories.Marten
             {
                 _documentSession.Store(msgEntry);
             }
- 
+
             await _documentSession.SaveChangesAsync();
         }
 
@@ -112,38 +113,62 @@ namespace SavingsPlatform.Common.Repositories.Marten
             return PostToStateStoreAsync(entry, null);
         }
 
-        protected async Task<ICollection<AggregateState<TData>>> QueryAggregateStateByKeysAsync(string[] keyNames, string[] keyValue, bool isKeyValueAString = true)
+        protected async Task<ICollection<AggregateState<TData>>> QueryAggregateStateByKeysAsync(string[] keyNames, object[] keyValue)
         {
             var queryStringBuilder = new StringBuilder();
 
-            foreach (var keyName in keyNames)
+            foreach (var q in Enumerable.Range(0, keyNames.Length))
             {
+                var kn = keyNames[q];
+                var qOp = "==";
+                var keyNameSegments = kn.Split(' ');
+                if (keyNameSegments.Count() > 1)
+                {
+                    kn = keyNameSegments.First();
+                    qOp = GetQueryOperator(keyNameSegments.Last());
+                }
+
                 if (queryStringBuilder.Length > 0)
                 {
                     queryStringBuilder.Append(" AND ");
                 }
 
-                var properties = keyName.Split('.');
-                queryStringBuilder.Append("data");
-                if (properties.Length > 2)
+                var kv = string.Empty;
+                if (keyValue[q] is string)
                 {
-                    queryStringBuilder.Append(" ->" + string.Join("->", properties.SkipLast(1).Select(p => $" '{p}' ")));
-                    queryStringBuilder.Append($" ->> '{properties.Last()}' = ?");
-                }
-                else if (properties.Length == 2)
-                {
-                    queryStringBuilder.Append($" -> '{properties[0]}' ->> '{properties[1]}' = ?");
+                    kv = $"\"{keyValue[q]}\"";
                 }
                 else
                 {
-                    queryStringBuilder.Append($" ->> '{properties[0]}' = ?");
+                    kv = $"{keyValue[q]}";
                 }
+
+                queryStringBuilder.Append($"data @@ '$.{kn} {qOp} {kv}'");
             }
             var queryStr = queryStringBuilder.ToString();
-            var result = (await _documentSession.QueryAsync<AggregateState<TData>>(queryStr, keyValue))
+            var result = (await _documentSession.QueryAsync<AggregateState<TData>>(queryStr))
                                 .ToList();
 
             return result;
+        }
+
+        private string GetQueryOperator(string keyOp)
+        {
+            if ( Enum.TryParse<QueryOperator>(keyOp, out var queryOperator))
+            {
+                return queryOperator switch
+                {
+                    QueryOperator.Equal => "==",
+                    QueryOperator.NotEqual => "<>",
+                    QueryOperator.GreaterThan => ">",
+                    QueryOperator.LessThan => "<",
+                    QueryOperator.GreaterThanOrEqual => ">=",
+                    QueryOperator.LessThanOrEqual => "<=",
+                    _ => "=",
+                };
+            }
+
+            return "==";
         }
 
         public async Task<bool> IsMessageProcessed(string msgId)

@@ -93,7 +93,7 @@ public class PlatformModule : ICarterModule
                    IMediator mediator
                    ) =>
         {
-            var iasaRes = await iasaRepository.QueryAccountsByKeyAsync(["hasUnpublishedEvents"], ["true"], false);
+            var iasaRes = await iasaRepository.QueryAccountsByKeyAsync(["hasUnpublishedEvents"], [true]);
 
             await Task.WhenAll(
                             iasaRes.Select(
@@ -119,6 +119,33 @@ public class PlatformModule : ICarterModule
                 return Results.NotFound();
             }
         }).WithTags(["platform"]);
+
+        app.MapPost("/api/platform/:acrrue-interest",
+        async (
+               IStateEntryQueryHandler<InstantAccessSavingsAccountState> iasaRepository,
+               IMediator mediator
+               ) =>
+        {
+            var iasaRes = await iasaRepository.QueryAccountsByKeyAsync(["data.activatedOn LessThan", "data.interestApplicationDueOn LessThanOrEqual"], 
+                                                                        [DateTime.UtcNow.ToString("yyyy-MM-dd"), DateTime.UtcNow.ToString("yyyy-MM-dd")]);
+
+            if (iasaRes.Any())
+            {
+                var grouped = iasaRes.GroupBy(acc => acc.CurrentAccountId);
+                
+                await Task.WhenAll(
+                    grouped.Select(
+                        g => mediator.Send(
+                            new AccrueInterestForAccountsCommand(Guid.NewGuid().ToString(), g.Key, g.Select(acc => acc.Key).ToArray(), DateTime.UtcNow)
+                )));
+            }
+
+
+            return Results.Ok();
+        }).WithTags(["platform"]);
+
+        app.MapMethods("/api/platform/:accrue-interest", ["OPTIONS"],
+            () => Task.FromResult(Results.Accepted())).WithTags(["platform"]);
 
         app.MapGet("/healthz", () => Results.Ok()).WithTags(["platform"]);
 

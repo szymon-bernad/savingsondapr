@@ -64,5 +64,11 @@ public class SavingsModule : ICarterModule
                 await publishingService.PublishCommand(transferCmd);
                 return Results.Accepted($"/api/platform/savings-account/command/{cmdId}");
             }).WithTags(["savings"]);
+
+        app.MapGet("/api/savings/savings-account-interest", async (IStateEntryQueryHandler<InstantAccessSavingsAccountState> repo) =>
+        {
+            var result = await repo.QueryAccountsByKeyAsync(["data.activatedOn LessThan", "data.totalBalance GreaterThan"], [DateTime.UtcNow.ToString("yyyy-MM-dd"), 0]);
+            return Results.Ok(result);
+        }).WithTags(["savings"]);
     }
 }

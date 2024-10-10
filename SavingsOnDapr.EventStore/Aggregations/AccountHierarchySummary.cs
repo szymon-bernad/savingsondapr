@@ -2,7 +2,7 @@
 using SavingsPlatform.Contracts.Accounts.Events;
 using System.Security.Cryptography.Xml;
 
-namespace SavingsOnDapr.EventStore;
+namespace SavingsOnDapr.EventStore.Aggregations;
 
 public class AccountHierarchySummary(DateTime? fromDate, DateTime? toDate)
 {
@@ -11,7 +11,7 @@ public class AccountHierarchySummary(DateTime? fromDate, DateTime? toDate)
 
     private HashSet<string> _transfers = new HashSet<string>();
 
-    public string Id { get; set; }
+    public string? Id { get; set; }
 
     public decimal TotalAmountTransferredToSavings { get; private set; } = default;
 
@@ -39,22 +39,22 @@ public class AccountHierarchySummary(DateTime? fromDate, DateTime? toDate)
         {
             if (!_transfers.Contains(evt.TransferId))
             {
-                ++this.TotalCountOfDepositTransfers;
+                ++TotalCountOfDepositTransfers;
                 _transfers.Add(evt.TransferId);
             }
 
             if (evt.AccountType == AccountType.SavingsAccount)
             {
-                this.TotalAmountTransferredToSavings += evt.Amount;
+                TotalAmountTransferredToSavings += evt.Amount;
             }
             else if (evt.AccountType == AccountType.CurrentAccount)
             {
-                this.TotalAmountWithdrawnFromSavings += evt.Amount;
+                TotalAmountWithdrawnFromSavings += evt.Amount;
             }
         }
         else if (evt.AccountType == AccountType.CurrentAccount)
         {
-            this.TotalAmountOfNewDeposits += evt.Amount;
+            TotalAmountOfNewDeposits += evt.Amount;
         }
     }
 
@@ -74,13 +74,13 @@ public class AccountHierarchySummary(DateTime? fromDate, DateTime? toDate)
         {
             if (!_transfers.Contains(evt.TransferId))
             {
-                ++this.TotalCountOfDepositTransfers;
+                ++TotalCountOfDepositTransfers;
                 _transfers.Add(evt.TransferId);
             }
         }
         else if (evt.AccountType == AccountType.CurrentAccount)
         {
-            this.TotalAmountOfWithdrawals += evt.Amount;
+            TotalAmountOfWithdrawals += evt.Amount;
         }
     }
 }

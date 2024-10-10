@@ -58,6 +58,13 @@ public class EventsModule : ICarterModule
                 return Results.Ok(result);
             });
 
+        app.MapGet("v1/events/transactions/{id}",
+            async (AccountHierarchyEventStore store, string id, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate) =>
+            {
+                var result = await store.GetAccountHierarchyTransactions(id, fromDate, toDate);
+
+                return Results.Ok(result.Transactions);
+            });
 
         app.MapGet("/healthz", () => Results.Ok());
 

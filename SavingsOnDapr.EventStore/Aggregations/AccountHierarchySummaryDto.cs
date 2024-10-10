@@ -1,4 +1,4 @@
-﻿namespace SavingsOnDapr.EventStore;
+﻿namespace SavingsOnDapr.EventStore.Aggregations;
 
 public record AccountHierarchySummaryDto(
     DateTime? FromDate,

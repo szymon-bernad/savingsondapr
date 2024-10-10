@@ -136,12 +136,14 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
         await TryUpdateAsync(request.MsgId);
     }
 
-    public async Task AccrueInterest(DateTime? since, DateTime till)
+    public async Task AccrueInterest(DateTime? since, DateTime till, decimal? adjustedBalance)
     {
         if (_state is null)
         {
             throw new InvalidOperationException($"AccrueInterest: Cannot process null state");
         }
+
+        var referredBalance = adjustedBalance ?? _state.TotalBalance;
 
         var actualSince = (since ?? _state.ActivatedOn) ?? 
             throw new InvalidOperationException(
@@ -153,7 +155,7 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
         if(tsDays > 0)
         {
             var accrualRatio = (tsDays / 365.0m) * (0.01m * _state.InterestRate);
-            var toBeAccrued = Math.Round(accrualRatio * _state.TotalBalance, 2, MidpointRounding.ToEven);
+            var toBeAccrued = Math.Round(accrualRatio * referredBalance, 2, MidpointRounding.ToEven);
             if (toBeAccrued > 0m)
             {
                 var eventsToPublish = _state.UnpublishedEvents?.Any() ?? false ?

@@ -3,6 +3,7 @@ using SavingsPlatform.Contracts.Accounts.Models;
 using ISavingsEvent = SavingsPlatform.Contracts.Accounts.Interfaces.IEvent;
 using IMartenEvent = Marten.Events.IEvent;
 using System.Collections;
+using SavingsOnDapr.EventStore.Aggregations;
 
 namespace SavingsOnDapr.EventStore.Store;
 
@@ -17,7 +18,7 @@ public class AccountHierarchyEventStore(IDocumentStore documentStore)
     {
         using var session = _documentStore.LightweightSession();
 
-        var newEvents = await this.DeduplicateEvents(session, events, cancellationToken);
+        var newEvents = await DeduplicateEvents(session, events, cancellationToken);
 
         if (newEvents.Any())
         {
@@ -67,7 +68,21 @@ public class AccountHierarchyEventStore(IDocumentStore documentStore)
         return null;
     }
 
-    private async Task<IEnumerable<ISavingsEvent>> DeduplicateEvents(
+    public async Task<AccountHierarchyTransactionsDto?> GetAccountHierarchyTransactions(string streamId, DateTime? fromDate, DateTime? toDate)
+    {
+        using var session = _documentStore.LightweightSession();
+
+        var txns = await session.Events.AggregateStreamAsync(streamId, 0, null, new AccountHierarchyTransactions(fromDate, toDate));
+
+        if (txns is not null)
+        {
+            return txns.MapToDto();
+        }
+
+        return null;
+    }
+
+    private static async Task<IEnumerable<ISavingsEvent>> DeduplicateEvents(
         IDocumentSession session,
         IEnumerable<ISavingsEvent> events,
         CancellationToken cancellationToken)

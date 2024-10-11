@@ -123,7 +123,7 @@ public class PlatformModule : ICarterModule
             }
         }).WithTags(["platform"]);
 
-        app.MapPost("/api/platform/:acrrue-interest",
+        app.MapPost("/api/platform/acrrue-interest",
         async (IStateEntryQueryHandler<InstantAccessSavingsAccountState> iasaRepository,
                IEventPublishingService publishingService) =>
         {
@@ -136,9 +136,11 @@ public class PlatformModule : ICarterModule
                 
                 await Task.WhenAll(
                     grouped.Select(g =>
-                        {
+                        {          
                             var cmdId = Guid.NewGuid().ToString();
-                            var transferCmd = new AccrueInterestForAccountsCommand(cmdId, g.Key, g.Select(acc => acc.Key).ToArray(), DateTime.UtcNow);
+                            var accountEntries = g.Select(acc => new AccountAccrualEntry(acc.Key, acc.ExternalRef, acc.InterestAccrualDueOn));
+
+                            var transferCmd = new AccrueInterestForAccountsCommand(cmdId, g.Key, accountEntries, DateTime.UtcNow);
                             return publishingService.PublishCommand(transferCmd);
                         }));
             }
@@ -147,7 +149,7 @@ public class PlatformModule : ICarterModule
 
         }).WithTags(["platform"]);
 
-        app.MapMethods("/api/platform/:accrue-interest", ["OPTIONS"],
+        app.MapMethods("/api/platform/accrue-interest", ["OPTIONS"],
             () => Task.FromResult(Results.Accepted())).WithTags(["platform"]);
 
         app.MapGet("/healthz", () => Results.Ok()).WithTags(["platform"]);

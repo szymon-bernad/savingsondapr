@@ -161,7 +161,8 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
                 var eventsToPublish = _state.UnpublishedEvents?.Any() ?? false ?
                     new Collection<object>(_state.UnpublishedEvents.ToList()) :
                     new Collection<object>();
-                eventsToPublish.Append(
+
+                eventsToPublish.Add(
                     new AccountInterestAccrued(
                         Guid.NewGuid().ToString(),
                         _state.ExternalRef,
@@ -169,13 +170,14 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
                         _state.AccruedInterest + toBeAccrued,
                         _state.TotalBalance,
                         _state.InterestRate,
-                        DateTime.UtcNow,
+                        till,
                         typeof(AccountInterestAccrued)!.Name,
                         _state.CurrentAccountId));
 
                 _state = _state with
                 {
                     AccruedInterest = _state.AccruedInterest + toBeAccrued,
+                    InterestAccrualDueOn = till.AddDays(1),
                     HasUnpublishedEvents = true,
                     UnpublishedEvents = eventsToPublish,
                 };
@@ -204,7 +206,7 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
             return;
         }
 
-        if (_state.InterestApplicationDueOn!.Value.Date <= DateTime.UtcNow)
+        if (_state.InterestApplicationDueOn.Value.Date <= DateTime.UtcNow)
         {
             var evnts = eventsToPublish.Append(
                 new AccountInterestApplied(

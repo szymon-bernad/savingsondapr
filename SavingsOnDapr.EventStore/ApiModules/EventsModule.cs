@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using SavingsOnDapr.EventStore.Store;
 using SavingsPlatform.Contracts.Accounts.Events;
+using SavingsPlatform.Contracts.Accounts.Models;
 
 namespace SavingsOnDapr.EventStore.ApiModules;
 
@@ -63,7 +64,7 @@ public class EventsModule : ICarterModule
             {
                 var result = await store.GetAccountHierarchyTransactions(id, fromDate, toDate);
 
-                return Results.Ok(result.Transactions);
+                return Results.Ok(result?.Transactions ?? Enumerable.Empty<TransactionEntry>());
             });
 
         app.MapGet("/healthz", () => Results.Ok());

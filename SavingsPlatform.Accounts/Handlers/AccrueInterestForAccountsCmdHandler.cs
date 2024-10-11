@@ -1,12 +1,6 @@
 ﻿using MediatR;
-using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
-using SavingsPlatform.Accounts.Aggregates.InstantAccess;
-using SavingsPlatform.Accounts.Current.Models;
-using SavingsPlatform.Accounts.Current;
-using SavingsPlatform.Common.Helpers;
-using SavingsPlatform.Common.Interfaces;
-using SavingsPlatform.Contracts.Accounts.Commands;
 using SavingsPlatform.Accounts.ApiClients;
+using SavingsPlatform.Contracts.Accounts.Commands;
 
 namespace SavingsPlatform.Accounts.Handlers;
 
@@ -20,9 +14,10 @@ public class AccrueInterestForAccountsCmdHandler(
 
     public async Task Handle(AccrueInterestForAccountsCommand request, CancellationToken cancellationToken)
     {
+        var accrualFrom = request.AccrualDate.AddDays(-1);
         var transactions = await _eventStoreApiClient.GetTransactionsForAccountHierarchyAsync(
             request.CurrentAccountId, 
-            request.AccrualDate.AddDays(-1),
+            accrualFrom,
             request.AccrualDate);
 
         var balanceDictionary = new Dictionary<string, decimal>();
@@ -38,12 +33,14 @@ public class AccrueInterestForAccountsCmdHandler(
             }
         }
 
-        await Task.WhenAll(request.SavingsAccountIds.Select(accountId =>
+        await Task.WhenAll(request.SavingsAccountIds.Select(acc =>
             _mediator.Send(new AccrueInterestCommand(
                 Guid.NewGuid().ToString(),
-                accountId,
+                acc.AccountId,
+                acc.ExternalRef,
                 request.AccrualDate,
-                balanceDictionary.ContainsKey(accountId) ? balanceDictionary[accountId] : null
+                acc.AccrualFrom ?? accrualFrom,
+                balanceDictionary.ContainsKey(acc.AccountId) ? balanceDictionary[acc.AccountId] : null
             ))));
 
     }

@@ -1,6 +1,7 @@
 ﻿using Marten;
 using Marten.Services;
 using Microsoft.Extensions.Logging;
+using NetTopologySuite.Index;
 using SavingsPlatform.Common.Helpers;
 using SavingsPlatform.Common.Interfaces;
 using SavingsPlatform.Common.Repositories.Enums;
@@ -40,11 +41,11 @@ namespace SavingsPlatform.Common.Repositories.Marten
             return TryUpsertAccountAsync(account, msgEntry);
         }
 
-        public async Task<ICollection<TEntry>> QueryAccountsByKeyAsync(string[] keyNames, object[] keyValues)
+        public async Task<ICollection<TEntry>> QueryAccountsByKeyAsync(string[] keyNames, object[] keyValues, int? limit = null)
         {
             _logger.LogInformation($"Querying accounts by key: {string.Join(", ", keyNames)}.");
 
-            var result = await QueryAggregateStateByKeysAsync(keyNames, keyValues);
+            var result = await QueryAggregateStateByKeysAsync(keyNames, keyValues, limit);
 
             if (result?.Any() ?? false)
             {
@@ -113,7 +114,7 @@ namespace SavingsPlatform.Common.Repositories.Marten
             return PostToStateStoreAsync(entry, null);
         }
 
-        protected async Task<ICollection<AggregateState<TData>>> QueryAggregateStateByKeysAsync(string[] keyNames, object[] keyValue)
+        protected async Task<ICollection<AggregateState<TData>>> QueryAggregateStateByKeysAsync(string[] keyNames, object[] keyValue, int? limit = null)
         {
             var queryStringBuilder = new StringBuilder();
 
@@ -133,10 +134,14 @@ namespace SavingsPlatform.Common.Repositories.Marten
                     queryStringBuilder.Append(" AND ");
                 }
 
-                var kv = string.Empty;
+                string? kv;
                 if (keyValue[q] is string)
                 {
                     kv = $"\"{keyValue[q]}\"";
+                }
+                else if (keyValue[q] is bool v)
+                {
+                    kv = v ? "true" : "false";
                 }
                 else
                 {
@@ -146,7 +151,8 @@ namespace SavingsPlatform.Common.Repositories.Marten
                 queryStringBuilder.Append($"data @@ '$.{kn} {qOp} {kv}'");
             }
             var queryStr = queryStringBuilder.ToString();
-            var result = (await _documentSession.QueryAsync<AggregateState<TData>>(queryStr))
+            var result =  (await _documentSession.QueryAsync<AggregateState<TData>>(queryStr))
+                                .Take(limit?? 100)
                                 .ToList();
 
             return result;
@@ -164,7 +170,7 @@ namespace SavingsPlatform.Common.Repositories.Marten
                     QueryOperator.LessThan => "<",
                     QueryOperator.GreaterThanOrEqual => ">=",
                     QueryOperator.LessThanOrEqual => "<=",
-                    _ => "=",
+                    _ => "==",
                 };
             }
 

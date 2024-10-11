@@ -1,8 +1,10 @@
 ﻿namespace SavingsPlatform.Contracts.Accounts.Commands;
 
+public record AccountAccrualEntry(string AccountId, string ExternalRef, DateTime? AccrualFrom);
+
 public record AccrueInterestForAccountsCommand(
     string MsgId,
     string CurrentAccountId,
-    string[] SavingsAccountIds,
-    DateTime AccrualDate
-    ) : ICommandRequest;
+    IEnumerable<AccountAccrualEntry> SavingsAccountIds,
+    DateTime AccrualDate) 
+        : ICommandRequest;

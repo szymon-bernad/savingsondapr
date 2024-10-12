@@ -1,8 +1,10 @@
 ﻿using Carter;
 using Dapr;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using SavingsOnDapr.EventStore.Store;
 using SavingsPlatform.Contracts.Accounts.Events;
+using SavingsPlatform.Contracts.Accounts.Models;
 
 namespace SavingsOnDapr.EventStore.ApiModules;
 
@@ -47,6 +49,22 @@ public class EventsModule : ICarterModule
                 var events = await store.FetchEventsAsync(id);
 
                 return Results.Ok(events.Select(e => e.Data));
+            });
+
+        app.MapGet("v1/events/accounts-summary/{id}",
+            async (AccountHierarchyEventStore store, string id, [FromQuery]DateTime? fromDate, [FromQuery]DateTime? toDate) =>
+            {
+                var result = await store.GetAccountHierarchySummary(id, fromDate, toDate);
+
+                return Results.Ok(result);
+            });
+
+        app.MapGet("v1/events/balances-summary/{id}",
+            async (AccountHierarchyEventStore store, string id, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate) =>
+            {
+                var result = await store.GetAccountHierarchyBalances(id, fromDate, toDate);
+
+                return Results.Ok(result?.BalanceRanges ?? new Dictionary<string, AccountBalanceRangeEntry>());
             });
 
         app.MapGet("/healthz", () => Results.Ok());

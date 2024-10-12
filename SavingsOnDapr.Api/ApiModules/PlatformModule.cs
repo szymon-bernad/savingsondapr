@@ -6,11 +6,11 @@ using MediatR;
 using SavingsPlatform.Accounts.Actors;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Common.Interfaces;
+using SavingsPlatform.Common.Services;
 using SavingsPlatform.Contracts.Accounts.Commands;
 using SavingsPlatform.Contracts.Accounts.Enums;
 using SavingsPlatform.Contracts.Accounts.Events;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace SavingsOnDapr.Api.ApiModules;
@@ -93,7 +93,7 @@ public class PlatformModule : ICarterModule
                    IMediator mediator
                    ) =>
         {
-            var iasaRes = await iasaRepository.QueryAccountsByKeyAsync(["hasUnpublishedEvents"], ["true"], false);
+            var iasaRes = await iasaRepository.QueryAccountsByKeyAsync(["hasUnpublishedEvents"], [true]);
 
             await Task.WhenAll(
                             iasaRes.Select(
@@ -106,7 +106,8 @@ public class PlatformModule : ICarterModule
         app.MapMethods("/api/platform/publish-events", ["OPTIONS"],
             () => Task.FromResult(Results.Accepted())).WithTags(["platform"]);
 
-        app.MapGet("/api/platform/savings-account/command/{msgid}", async (string msgid, IStateEntryRepository<InstantAccessSavingsAccountState> repo) =>
+        app.MapGet("/api/platform/savings-account/command/{msgid}", 
+        async (string msgid, IStateEntryRepository<InstantAccessSavingsAccountState> repo) =>
         {
             var result = (await repo.IsMessageProcessed(msgid));
 
@@ -119,6 +120,37 @@ public class PlatformModule : ICarterModule
                 return Results.NotFound();
             }
         }).WithTags(["platform"]);
+
+        app.MapPost("/api/platform/acrrue-interest",
+        async (IStateEntryQueryHandler<InstantAccessSavingsAccountState> iasaRepository,
+               IEventPublishingService publishingService) =>
+        {
+            var dtActivated = DateTime.UtcNow.AddDays(-1).ToString("yyyy-MM-ddTHH:mm:ss");
+            var dtAccrued = DateTime.UtcNow.AddHours(-20).ToString("yyyy-MM-ddTHH:mm:ss");
+            var iasaRes = await iasaRepository.QueryAccountsByKeyAsync(
+                    ["data.activatedOn LessThan", "data.interestAccruedOn LessThanOrEqual"], 
+                    [dtActivated, dtAccrued]);
+
+            if (iasaRes.Count != 0)
+            {
+                var grouped = iasaRes.GroupBy(acc => acc.CurrentAccountId);
+                
+                await Task.WhenAll(
+                    grouped.Select(g =>
+                        {          
+                            var cmdId = Guid.NewGuid().ToString();
+                            var accountEntries = g.Select(acc => new AccountAccrualEntry(acc.Key, acc.ExternalRef, acc.InterestAccruedOn));
+
+                            var transferCmd = new AccrueInterestForAccountsCommand(cmdId, g.Key, accountEntries, DateTime.UtcNow);
+                            return publishingService.PublishCommand(transferCmd);
+                        }));
+            }
+
+            return Results.Ok();
+        }).WithTags(["platform"]);
+
+        app.MapMethods("/api/platform/accrue-interest", ["OPTIONS"],
+            () => Task.FromResult(Results.Accepted())).WithTags(["platform"]);
 
         app.MapGet("/healthz", () => Results.Ok()).WithTags(["platform"]);
 

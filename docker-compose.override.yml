@@ -7,6 +7,7 @@ services:
       - DAPR_HTTP_PORT=3605
       - NAMESPACE=savings
       - ConnectionStrings__DocumentStore=host='postgres';username='postgres';password='example';port='5432';database='doc-store'
+      - EventStoreApiConfig__EventStoreApiServiceName=dapr-savings-evt
     ports:
       - "5136:8080"
 

@@ -11,12 +11,13 @@ using SavingsPlatform.Common.Helpers;
 using SavingsPlatform.Accounts.Current.Models;
 using SavingsPlatform.Accounts.Current;
 using SavingsPlatform.Accounts.Actors;
+using SavingsPlatform.Accounts.ApiClients;
 
 namespace SavingsPlatform.Accounts.DependencyInjection;
 
 public static class SavingsPlatformAccountsDIExt
 {
-    public static IServiceCollection AddSavingsAccounts(this IServiceCollection services)
+    public static IServiceCollection AddSavingsAccounts(this IServiceCollection services, ConfigurationManager config)
     {
         services.AddTransient<IStateMapper<AggregateState<InstantAccessSavingsAccountDto>, InstantAccessSavingsAccountState>, InstantAccessSavingsAccountStateMapper>()
             .AddScoped<IStateEntryRepository<InstantAccessSavingsAccountState>, InstantAccessSavingsAccountRepository>()
@@ -27,11 +28,14 @@ public static class SavingsPlatformAccountsDIExt
             .AddScoped<IStateEntryQueryHandler<CurrentAccountState>, CurrentAccountRepository>()
             .AddTransient<IAggregateRootFactory<CurrentAccount, CurrentAccountState>, CurrentAccountFactory>()
             .AddScoped<IEventPublishingService, DaprEventPublishingService>()
+            .AddScoped<IEventStoreApiClient, EventStoreApiClient>()
             .AddSingleton<IThreadSynchronizer, ThreadSynchronizer>()
             .AddActors(options =>
                 {
                     options.Actors.RegisterActor<DepositTransferActor>();
                 });
+
+        services.Configure<EventStoreApiConfig>(config.GetSection("EventStoreApiConfig"));
 
         return services;
     }

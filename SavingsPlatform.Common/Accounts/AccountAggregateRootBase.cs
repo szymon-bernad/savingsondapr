@@ -82,6 +82,7 @@ namespace SavingsPlatform.Common.Accounts
                 amount,
                 transferRef,
                 DateTime.UtcNow,
+                _state.TotalBalance + amount,
                 typeof(AccountCredited)!.Name,
                 _state.Type,
                 _state.CurrentAccountId));
@@ -117,6 +118,7 @@ namespace SavingsPlatform.Common.Accounts
                 amount,
                 transferRef,
                 DateTime.UtcNow,
+                _state.TotalBalance - amount,
                 typeof(AccountDebited)!.Name,
                 _state.Type,
                 _state.CurrentAccountId)];

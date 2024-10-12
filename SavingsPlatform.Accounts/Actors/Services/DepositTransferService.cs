@@ -20,11 +20,6 @@ public class DepositTransferService(
     public const string TransferAttemptRegister = nameof(TransferAttemptRegister);
     public const string TransferAttemptUnregister = nameof(TransferAttemptUnregister);
 
-    private readonly IActorStateManager _actorStateManager = actorStateManager;
-    private readonly IStateEntryQueryHandler<CurrentAccountState> _currentAccountQueryHandler = currentAccountQueryHandler;
-    private readonly IStateEntryQueryHandler<InstantAccessSavingsAccountState> _iasaQueryHandler = iasaQueryHandler;
-    private readonly IEventPublishingService _eventPublishingService = eventPublishingService;
-
     public async Task<string?> InitiateTransferAsync(DepositTransferData? data)
     {
         data ??= await actorStateManager.GetStateAsync<DepositTransferData>(DepositTransferService.DepositTransferState);

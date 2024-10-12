@@ -59,12 +59,12 @@ public class EventsModule : ICarterModule
                 return Results.Ok(result);
             });
 
-        app.MapGet("v1/events/transactions/{id}",
+        app.MapGet("v1/events/balances-summary/{id}",
             async (AccountHierarchyEventStore store, string id, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate) =>
             {
-                var result = await store.GetAccountHierarchyTransactions(id, fromDate, toDate);
+                var result = await store.GetAccountHierarchyBalances(id, fromDate, toDate);
 
-                return Results.Ok(result?.Transactions ?? Enumerable.Empty<TransactionEntry>());
+                return Results.Ok(result?.BalanceRanges ?? new Dictionary<string, AccountBalanceRangeEntry>());
             });
 
         app.MapGet("/healthz", () => Results.Ok());

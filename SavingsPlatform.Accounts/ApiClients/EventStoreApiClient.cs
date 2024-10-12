@@ -1,6 +1,7 @@
 ﻿using Dapr.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using SavingsPlatform.Accounts.Current;
 using SavingsPlatform.Common.Config;
 using SavingsPlatform.Contracts.Accounts.Models;
 using System.Text;
@@ -19,9 +20,16 @@ public class EventStoreApiClient(
     private readonly ILogger<EventStoreApiClient> _logger = logger;
 
 
-    public async Task<IEnumerable<TransactionEntry>> GetTransactionsForAccountHierarchyAsync(string currentAccountId, DateTime? fromDate, DateTime? toDate)
+    public Task<IDictionary<string, AccountBalanceRangeEntry>> GetBalancesForAccountHierarchyAsync(
+        string currentAccountId, DateTime? fromDate, DateTime? toDate) =>
+            _daprClient.InvokeMethodAsync<IDictionary<string, AccountBalanceRangeEntry>>(
+                HttpMethod.Get,
+                _config.EventStoreApiServiceName,
+                PrepareDateRangeQuery(currentAccountId, fromDate, toDate));
+
+    private string PrepareDateRangeQuery(string currentAccountId, DateTime? fromDate, DateTime? toDate)
     {
-        var queryString = new StringBuilder(string.Format(_config.TransactionsEndpoint, currentAccountId));
+        var queryString = new StringBuilder(string.Format(_config.BalancesEndpoint, currentAccountId));
 
         if (fromDate.HasValue)
         {
@@ -34,11 +42,6 @@ public class EventStoreApiClient(
             queryString.Append($"{_config.ToQueryParameter}={toDate.Value:s}");
         }
 
-        var daprResult = await _daprClient.InvokeMethodAsync<IEnumerable<TransactionEntry>>(
-            HttpMethod.Get,
-            _config.EventStoreApiServiceName,
-            queryString.ToString());
-
-        return daprResult ?? Enumerable.Empty<TransactionEntry>();
+        return queryString.ToString();
     }
 }

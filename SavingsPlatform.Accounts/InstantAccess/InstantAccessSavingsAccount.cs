@@ -88,6 +88,7 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
             {
                 ActivatedOn = DateTime.UtcNow,
                 InterestApplicationDueOn = CalculateInterestApplicationDate(DateTime.UtcNow),
+                InterestAccruedOn = DateTime.UtcNow,
             };
 
             eventsToPublish.Add(
@@ -177,7 +178,7 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
                 _state = _state with
                 {
                     AccruedInterest = _state.AccruedInterest + toBeAccrued,
-                    InterestAccrualDueOn = till.AddDays(1),
+                    InterestAccruedOn = till,
                     HasUnpublishedEvents = true,
                     UnpublishedEvents = eventsToPublish,
                 };

@@ -11,9 +11,7 @@ using SavingsPlatform.Contracts.Accounts.Commands;
 using SavingsPlatform.Contracts.Accounts.Enums;
 using SavingsPlatform.Contracts.Accounts.Events;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using static Google.Rpc.Context.AttributeContext.Types;
 
 namespace SavingsOnDapr.Api.ApiModules;
 
@@ -127,8 +125,11 @@ public class PlatformModule : ICarterModule
         async (IStateEntryQueryHandler<InstantAccessSavingsAccountState> iasaRepository,
                IEventPublishingService publishingService) =>
         {
-            var iasaRes = await iasaRepository.QueryAccountsByKeyAsync(["data.activatedOn LessThan", "data.interestAccrualDueOn LessThanOrEqual"], 
-                                                                        [DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss"), DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss")]);
+            var dtActivated = DateTime.UtcNow.AddDays(-1).ToString("yyyy-MM-ddTHH:mm:ss");
+            var dtAccrued = DateTime.UtcNow.AddHours(-20).ToString("yyyy-MM-ddTHH:mm:ss");
+            var iasaRes = await iasaRepository.QueryAccountsByKeyAsync(
+                    ["data.activatedOn LessThan", "data.interestAccruedOn LessThanOrEqual"], 
+                    [dtActivated, dtAccrued]);
 
             if (iasaRes.Count != 0)
             {
@@ -138,7 +139,7 @@ public class PlatformModule : ICarterModule
                     grouped.Select(g =>
                         {          
                             var cmdId = Guid.NewGuid().ToString();
-                            var accountEntries = g.Select(acc => new AccountAccrualEntry(acc.Key, acc.ExternalRef, acc.InterestAccrualDueOn));
+                            var accountEntries = g.Select(acc => new AccountAccrualEntry(acc.Key, acc.ExternalRef, acc.InterestAccruedOn));
 
                             var transferCmd = new AccrueInterestForAccountsCommand(cmdId, g.Key, accountEntries, DateTime.UtcNow);
                             return publishingService.PublishCommand(transferCmd);
@@ -146,7 +147,6 @@ public class PlatformModule : ICarterModule
             }
 
             return Results.Ok();
-
         }).WithTags(["platform"]);
 
         app.MapMethods("/api/platform/accrue-interest", ["OPTIONS"],

@@ -52,7 +52,7 @@ public class AccountHierarchyEventStore(IDocumentStore documentStore)
     {
         using var session = _documentStore.LightweightSession();
 
-        var summary = await session.Events.AggregateStreamAsync(streamId, 0, null, new AccountHierarchySummary(fromDate, toDate));
+        var summary = await session.Events.AggregateStreamAsync(streamId, 0, toDate, new AccountHierarchySummary(fromDate, toDate));
 
         if (summary is not null)
         {
@@ -68,15 +68,15 @@ public class AccountHierarchyEventStore(IDocumentStore documentStore)
         return null;
     }
 
-    public async Task<AccountHierarchyTransactionsDto?> GetAccountHierarchyTransactions(string streamId, DateTime? fromDate, DateTime? toDate)
+    public async Task<AccountHierarchyBalanceRangesDto?> GetAccountHierarchyBalances(string streamId, DateTime? fromDate, DateTime? toDate)
     {
         using var session = _documentStore.LightweightSession();
 
-        var txns = await session.Events.AggregateStreamAsync(streamId, 0, null, new AccountHierarchyTransactions(fromDate, toDate));
+        var balances = await session.Events.AggregateStreamAsync(streamId, 0, toDate, new AccountHierarchyBalanceSummary(fromDate, toDate));
 
-        if (txns is not null)
+        if (balances is not null)
         {
-            return txns.MapToDto();
+            return balances.MapToDto();
         }
 
         return null;

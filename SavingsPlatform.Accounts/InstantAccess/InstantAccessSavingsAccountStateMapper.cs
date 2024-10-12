@@ -27,7 +27,7 @@ public class InstantAccessSavingsAccountStateMapper : IStateMapper<AggregateStat
             CurrentAccountId = state.Data.CurrentAccountId,
             HasUnpublishedEvents = state.HasUnpublishedEvents,
             InterestApplicationDueOn = state.Data.InterestApplicationDueOn,
-            InterestAccrualDueOn = state.Data.InterestAccrualDueOn,
+            InterestAccruedOn = state.Data.InterestAccruedOn,
             UnpublishedEvents = unpubEvents
         };
     }
@@ -48,7 +48,7 @@ public class InstantAccessSavingsAccountStateMapper : IStateMapper<AggregateStat
                 dto.CurrentAccountId,
                 dto.InterestApplicationFrequency,
                 dto.InterestApplicationDueOn,
-                dto.InterestAccrualDueOn),
+                dto.InterestAccruedOn),
             HasUnpublishedEvents = dto.HasUnpublishedEvents,
             UnpublishedEventsJson = dto.UnpublishedEvents?.Any() ?? false ?
                 JsonSerializer.Serialize(Enumerable.Cast<object>(dto.UnpublishedEvents)) : null

@@ -15,23 +15,10 @@ public class AccrueInterestForAccountsCmdHandler(
     public async Task Handle(AccrueInterestForAccountsCommand request, CancellationToken cancellationToken)
     {
         var accrualFrom = request.AccrualDate.AddDays(-1);
-        var transactions = await _eventStoreApiClient.GetTransactionsForAccountHierarchyAsync(
+        var balances = await _eventStoreApiClient.GetBalancesForAccountHierarchyAsync(
             request.CurrentAccountId, 
             accrualFrom,
             request.AccrualDate);
-
-        var balanceDictionary = new Dictionary<string, decimal>();
-
-        if (transactions.Any())
-        {
-            var groupedTxns = transactions.GroupBy(x => x.AccountId);
-
-            foreach (var group in groupedTxns)
-            {
-                var balance = group.Average(x => x.TotalBalance);
-                balanceDictionary.Add(group.Key, balance);
-            }
-        }
 
         await Task.WhenAll(request.SavingsAccountIds.Select(acc =>
             _mediator.Send(new AccrueInterestCommand(
@@ -40,10 +27,10 @@ public class AccrueInterestForAccountsCmdHandler(
                 acc.ExternalRef,
                 request.AccrualDate,
                 acc.AccrualFrom ?? accrualFrom,
-                balanceDictionary.ContainsKey(acc.AccountId) ? balanceDictionary[acc.AccountId] : null
-            ))));
+                (balances?.ContainsKey(acc.AccountId) ?? false) ? 
+                    (balances[acc.AccountId].MinTotalBalance + balances[acc.AccountId].MaxTotalBalance)*0.5m :
+                    null))
+            ));
 
     }
-
-
 }

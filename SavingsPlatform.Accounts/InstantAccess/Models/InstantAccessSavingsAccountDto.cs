@@ -13,6 +13,6 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess.Models
         string CurrentAccountId,
         ProcessFrequency InterestApplicationFrequency = ProcessFrequency.Weekly,
         DateTime? InterestApplicationDueOn = null,
-        DateTime? InterestAccrualDueOn = null,
+        DateTime? InterestAccruedOn = null,
         AccountType Type = AccountType.SavingsAccount);
 }

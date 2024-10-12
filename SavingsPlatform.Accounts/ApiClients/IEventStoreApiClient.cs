@@ -4,5 +4,5 @@ namespace SavingsPlatform.Accounts.ApiClients;
 
 public interface IEventStoreApiClient
 {
-    Task<IEnumerable<TransactionEntry>> GetTransactionsForAccountHierarchyAsync(string currentAccountId, DateTime? fromDate, DateTime? toDate);
+    Task<IDictionary<string, AccountBalanceRangeEntry>> GetBalancesForAccountHierarchyAsync(string currentAccountId, DateTime? fromDate, DateTime? toDate);
 }

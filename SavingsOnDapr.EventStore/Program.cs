@@ -8,6 +8,8 @@ using Marten.Events;
 using SavingsOnDapr.EventStore.Store;
 using Microsoft.Extensions.Options;
 using SavingsPlatform.Contracts.Accounts.Models;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Resources;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,8 +28,8 @@ builder.Services.AddMarten(
         opts.AutoCreateSchemaObjects = AutoCreate.All;
         opts.Events.AppendMode = EventAppendMode.Quick;
         opts.Events.StreamIdentity = StreamIdentity.AsString;
-
     });
+
 builder.Services.AddScoped<AccountHierarchyEventStore>();
 
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -44,6 +46,12 @@ jsonOptions.Converters.Add(new JsonStringEnumConverter());
 var daprHttpPort = Environment.GetEnvironmentVariable("DAPR_HTTP_PORT") ?? throw new ApplicationException("DAPR_HTTP_PORT is not set as EnvVar");
 builder.Services.AddDaprClient(dpr => { dpr.UseJsonSerializationOptions(jsonOptions); });
 builder.Services.AddCarter();
+
+builder.Services.AddOpenTelemetry()
+    .WithTracing(builder => 
+        builder.AddAspNetCoreInstrumentation()
+        .ConfigureResource(r => r.AddService("savings-eventstore"))
+        .AddZipkinExporter());
 
 var app = builder.Build();
 

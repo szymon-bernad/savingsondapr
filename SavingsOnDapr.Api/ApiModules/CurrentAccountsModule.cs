@@ -15,7 +15,7 @@ public class CurrentAccountsModule : ICarterModule
     {
         app.MapGet("/api/accounts/{refid}", async (string refid, IStateEntryQueryHandler<CurrentAccountState> repo) =>
         {
-            var result = await repo.QueryAccountsByKeyAsync(["data.externalRef"], [refid]);
+            var result = await repo.QueryAccountsByKeyAsync(["externalRef"], [refid]);
             return Results.Ok(result);
         }).WithTags(["accounts"]);
 
@@ -25,7 +25,7 @@ public class CurrentAccountsModule : ICarterModule
                    CreateCurrentAccount request) =>
             {
 
-                var caResult = await caRepo.QueryAccountsByKeyAsync(["data.externalRef"], [request.ExternalRef]);
+                var caResult = await caRepo.QueryAccountsByKeyAsync(["externalRef"], [request.ExternalRef]);
                 if (caResult.Any())
                 {
                     return Results.BadRequest("Current Account already exists.");

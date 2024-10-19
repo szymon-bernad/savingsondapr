@@ -20,6 +20,7 @@ public class AccrueInterestForAccountsCmdHandler(
             accrualFrom,
             request.AccrualDate);
 
+        
         await Task.WhenAll(request.SavingsAccountIds.Select(acc =>
             _mediator.Send(new AccrueInterestCommand(
                 Guid.NewGuid().ToString(),

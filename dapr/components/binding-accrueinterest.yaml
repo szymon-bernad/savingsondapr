@@ -2,14 +2,15 @@ apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
   name: accrue-interest
-  namespace: savings
 spec:
   type: bindings.cron
   version: v1
   metadata:
   - name: schedule
-    value: "@every 10m"
+    value: "0 */10 19-23 * * *"
   - name: direction
     value: "input"
   - name: route
     value: /api/platform/accrue-interest
+scopes:
+- dapr-savings-api

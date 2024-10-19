@@ -1,17 +1,20 @@
-using System.Text.Json.Serialization;
-using System.Text.Json;
+using Carter;
 using Marten;
-using Weasel.Core;
+using Marten.Services;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using SavingsOnDapr.Api;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
+using SavingsPlatform.Accounts.Current.Models;
+using SavingsPlatform.Accounts.DependencyInjection;
+using SavingsPlatform.Accounts.Handlers;
 using SavingsPlatform.Common.Repositories;
 using SavingsPlatform.Contracts.Accounts;
-using SavingsPlatform.Accounts.DependencyInjection;
-using SavingsOnDapr.Api;
-using Carter;
 using SavingsPlatform.Contracts.Accounts.Commands;
 using System.Reflection;
-using SavingsPlatform.Accounts.Handlers;
-using SavingsPlatform.Accounts.Current.Models;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Weasel.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,9 +43,15 @@ builder.Services.AddMarten(options =>
         options.Schema.For<MessageProcessedEntry>().UseIdentityKey();
         options.Schema.For<AggregateState<InstantAccessSavingsAccountState>>().UseOptimisticConcurrency(true);
         options.Schema.For<AggregateState<CurrentAccountState>>().UseOptimisticConcurrency(true);
-
     })
     .BuildSessionsWith<CustomSessionFactory>();
+
+builder.Services.AddOpenTelemetry()
+    .WithTracing(builder => builder
+        .AddAspNetCoreInstrumentation()
+        .ConfigureResource(r => r.AddService("savings-accounts"))
+        .AddConsoleExporter()
+        .AddZipkinExporter());
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

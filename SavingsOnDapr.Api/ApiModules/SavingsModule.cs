@@ -17,7 +17,7 @@ public class SavingsModule : ICarterModule
     {
         app.MapGet("/api/savings/savings-account/{refid}", async (string refid, IStateEntryQueryHandler<InstantAccessSavingsAccountState> repo) =>
         {
-            var result = await repo.QueryAccountsByKeyAsync(new string[] { "data.externalRef" }, new string[] { refid });
+            var result = await repo.QueryAccountsByKeyAsync(["externalRef"], [ refid ]);
             return Results.Ok(result);
         }).WithTags(["savings"]);
 
@@ -27,14 +27,14 @@ public class SavingsModule : ICarterModule
                    IStateEntryQueryHandler<CurrentAccountState> caRepo,
                    CreateSavingsAccount request) =>
             {
-                var result = await iasaRepo.QueryAccountsByKeyAsync(["data.externalRef"], [request.ExternalRef]);
+                var result = await iasaRepo.QueryAccountsByKeyAsync(["externalRef"], [request.ExternalRef]);
 
                 if(result.Any())
                 {
                     return Results.BadRequest("Savings Account already exists");
                 }
 
-                var caResult = await caRepo.QueryAccountsByKeyAsync(["data.externalRef"], [request.CurrentAccountRef]);
+                var caResult = await caRepo.QueryAccountsByKeyAsync(["externalRef"], [request.CurrentAccountRef]);
                 if(!caResult.Any())
                 {
                     return Results.BadRequest("Current Account not found");

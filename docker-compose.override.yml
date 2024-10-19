@@ -8,6 +8,7 @@ services:
       - NAMESPACE=savings
       - ConnectionStrings__DocumentStore=host='postgres';username='postgres';password='example';port='5432';database='doc-store'
       - EventStoreApiConfig__EventStoreApiServiceName=dapr-savings-evt
+      - OTEL_EXPORTER_ZIPKIN_ENDPOINT=http://zipkin:9411/api/v2/spans
     ports:
       - "5136:8080"
 
@@ -45,6 +46,7 @@ services:
       - DAPR_HTTP_PORT=3606
       - ConnectionStrings__MartenStore=host='postgres';username='postgres';password='example';port='5432';database='event-store'
       - NAMESPACE=savingsplatform
+      - OTEL_EXPORTER_ZIPKIN_ENDPOINT=http://zipkin:9411/api/v2/spans
     ports:
       - "5163:8080"
 

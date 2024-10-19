@@ -31,7 +31,7 @@ internal class CurrentAccountFactory : IAggregateRootFactory<CurrentAccount, Cur
 
     public async Task<CurrentAccount> GetInstanceByExternalRefAsync(string externalRef)
     {
-        var stateEntry = (await _repository.QueryAccountsByKeyAsync(["data.externalRef"], [externalRef])).SingleOrDefault();
+        var stateEntry = (await _repository.QueryAccountsByKeyAsync(["externalRef"], [externalRef])).SingleOrDefault();
         if (stateEntry is not null)
         {
             return new CurrentAccount(_repository, stateEntry);

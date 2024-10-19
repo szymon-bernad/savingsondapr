@@ -17,8 +17,8 @@ public class InstantAccessSavingsAccountStateMapper : IStateMapper<AggregateStat
 
         return new InstantAccessSavingsAccountState
         {
-            Key = state.Data!.Id,
-            ExternalRef = state.Data!.ExternalRef,
+            Key = state.Id,
+            ExternalRef = state.ExternalRef,
             InterestRate = state.Data!.InterestRate,
             AccruedInterest = state.Data!.AccruedInterest,
             OpenedOn = state.Data.OpenedOn,
@@ -37,9 +37,8 @@ public class InstantAccessSavingsAccountStateMapper : IStateMapper<AggregateStat
         return new AggregateState<InstantAccessSavingsAccountDto>
         {
             Id = dto.Key,
+            ExternalRef = dto.ExternalRef,
             Data = new InstantAccessSavingsAccountDto(
-                dto.Key,
-                dto.ExternalRef,
                 dto.OpenedOn,
                 dto.ActivatedOn,
                 dto.InterestRate,

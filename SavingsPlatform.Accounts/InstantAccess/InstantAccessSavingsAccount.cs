@@ -156,7 +156,7 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
         if(tsDays > 0)
         {
             var accrualRatio = (tsDays / 365.0m) * (0.01m * _state.InterestRate);
-            var toBeAccrued = Math.Round(accrualRatio * referredBalance, 2, MidpointRounding.ToEven);
+            var toBeAccrued = Math.Round(accrualRatio * referredBalance, 4, MidpointRounding.ToEven);
             if (toBeAccrued > 0m)
             {
                 var eventsToPublish = _state.UnpublishedEvents?.Any() ?? false ?
@@ -188,6 +188,8 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
             }
         }  
     }
+
+    public Task DummyUpdateAsync() => TryUpdateAsync(null);
 
     private int CalculateDaysCount(DateTime actualSince, DateTime till)
     {

@@ -4,6 +4,7 @@ using Dapr.Actors;
 using Dapr.Actors.Client;
 using MediatR;
 using SavingsPlatform.Accounts.Actors;
+using SavingsPlatform.Accounts.Aggregates.InstantAccess;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Common.Interfaces;
 using SavingsPlatform.Common.Services;
@@ -121,11 +122,11 @@ public class PlatformModule : ICarterModule
             }
         }).WithTags(["platform"]);
 
-        app.MapPost("/api/platform/acrrue-interest",
+        app.MapPost("/api/platform/accrue-interest",
         async (IStateEntryQueryHandler<InstantAccessSavingsAccountState> iasaRepository,
                IEventPublishingService publishingService) =>
         {
-            var dtActivated = DateTime.UtcNow.AddDays(-1).ToString("yyyy-MM-ddTHH:mm:ss");
+           var dtActivated = DateTime.UtcNow.AddDays(-1).ToString("yyyy-MM-ddTHH:mm:ss");
             var dtAccrued = DateTime.UtcNow.AddHours(-20).ToString("yyyy-MM-ddTHH:mm:ss");
             var iasaRes = await iasaRepository.QueryAccountsByKeyAsync(
                     ["data.activatedOn LessThan", "data.interestAccruedOn LessThanOrEqual"], 
@@ -148,6 +149,20 @@ public class PlatformModule : ICarterModule
 
             return Results.Ok();
         }).WithTags(["platform"]);
+
+        app.MapPost("/api/platfrom/migrate-savings",
+            async(IStateEntryQueryHandler<InstantAccessSavingsAccountState> iasaRepository,
+                 IAggregateRootFactory<InstantAccessSavingsAccount, InstantAccessSavingsAccountState> iasaFactory) =>
+            { 
+                var accounts = await iasaRepository.QueryAccountsByKeyAsync([ "data.type" ], ["SavingsAccount"]);
+
+                foreach(var acc in accounts)
+                {
+                    var aggr = await iasaFactory.GetInstanceAsync(acc.Key);
+                    await aggr.DummyUpdateAsync();
+                }
+                return Results.Ok();
+            }).WithTags(["platform"]);
 
         app.MapMethods("/api/platform/accrue-interest", ["OPTIONS"],
             () => Task.FromResult(Results.Accepted())).WithTags(["platform"]);

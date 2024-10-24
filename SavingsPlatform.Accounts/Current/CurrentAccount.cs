@@ -45,6 +45,7 @@ public class CurrentAccount : AccountAggregateRootBase<CurrentAccountState>
                 accountId,
                 accountId,
                 AccountType.CurrentAccount,
+                request.AccountCurrency,
                 DateTime.UtcNow,
                 typeof(AccountCreated).Name)
         };
@@ -55,6 +56,7 @@ public class CurrentAccount : AccountAggregateRootBase<CurrentAccountState>
             ExternalRef = request.ExternalRef,
             OpenedOn = DateTime.UtcNow,
             TotalBalance = 0m,
+            Currency = request.AccountCurrency,
             HasUnpublishedEvents = true,
             UnpublishedEvents = eventsToPub,
         };

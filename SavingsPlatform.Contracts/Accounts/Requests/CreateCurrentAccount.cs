@@ -1,3 +1,5 @@
-﻿namespace SavingsPlatform.Contracts.Accounts.Requests;
+﻿using SavingsPlatform.Contracts.Accounts.Enums;
 
-public record CreateCurrentAccount(string ExternalRef);
+namespace SavingsPlatform.Contracts.Accounts.Requests;
+
+public record CreateCurrentAccount(string ExternalRef, Currency AccountCurrency);

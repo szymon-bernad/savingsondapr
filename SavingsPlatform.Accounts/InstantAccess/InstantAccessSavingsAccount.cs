@@ -48,6 +48,7 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
                 request.CurrentAccountId,
                 accountId,
                 AccountType.SavingsAccount,
+                Currency.EUR,
                 DateTime.UtcNow,
                 typeof(AccountCreated).Name)
         };

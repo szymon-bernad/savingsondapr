@@ -18,6 +18,7 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess.Models
         public required string CurrentAccountId { get; init; }
         public bool HasUnpublishedEvents { get; set; } = false;
         public ICollection<object>? UnpublishedEvents { get; set; } = default;
+        public Currency Currency { get; set; } = Currency.EUR;
         public AccountType Type { get; set; } = AccountType.SavingsAccount;
     } 
 }

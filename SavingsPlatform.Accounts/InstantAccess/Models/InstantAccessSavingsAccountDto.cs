@@ -12,5 +12,6 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess.Models
         ProcessFrequency InterestApplicationFrequency = ProcessFrequency.Weekly,
         DateTime? InterestApplicationDueOn = null,
         DateTime? InterestAccruedOn = null,
+        Currency Currency = Currency.EUR,
         AccountType Type = AccountType.SavingsAccount);
 }

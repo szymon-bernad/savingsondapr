@@ -20,6 +20,7 @@ internal class CurrentAccountStateMapper : IStateMapper<AggregateState<CurrentAc
             ExternalRef = stateDto.ExternalRef,
             OpenedOn = stateDto.Data!.OpenedOn,
             TotalBalance = stateDto.Data!.TotalBalance,
+            Currency = stateDto.Data!.Currency,
             HasUnpublishedEvents = stateDto.HasUnpublishedEvents,
             UnpublishedEvents = unpubEvents
         };
@@ -33,7 +34,8 @@ internal class CurrentAccountStateMapper : IStateMapper<AggregateState<CurrentAc
             ExternalRef = dto.ExternalRef,
             Data = new CurrentAccountDto(
                 dto.OpenedOn,
-                dto.TotalBalance),
+                dto.TotalBalance,
+                dto.Currency),
             HasUnpublishedEvents = dto.HasUnpublishedEvents,
             UnpublishedEventsJson = dto.UnpublishedEvents?.Any() ?? false ?
             JsonSerializer.Serialize(Enumerable.Cast<object>(dto.UnpublishedEvents)) : null

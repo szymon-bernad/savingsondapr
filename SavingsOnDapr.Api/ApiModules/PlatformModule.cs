@@ -57,7 +57,7 @@ public class PlatformModule : ICarterModule
 
                             await actorInstance.HandleCreditedEventAsync(@event.AccountId);
                         }
-                    }).WithTags(["platform"]); ;
+                    }).WithTags(["platform"]);
 
 
         app.MapPost("/api/platform/commands",

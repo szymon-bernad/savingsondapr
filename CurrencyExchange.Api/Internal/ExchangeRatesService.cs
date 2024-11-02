@@ -41,7 +41,7 @@ internal class ExchangeRatesService : IExchangeRatesService
                 { 
                     SourceCurrency = source,
                     TargetCurrency = target,
-                    ExchangeRates = rates.OrderBy(r => r.LowerBound).ToList(),
+                    ExchangeRates = rates?.OrderBy(r => r.LowerBound)?.ToList() ?? new List<ExchangeRateEntry>(),
                 });
         }
         else

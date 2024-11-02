@@ -1,5 +1,6 @@
 ﻿using Carter;
 using CurrencyExchange.Api.Internal;
+using Dapr.Workflow;
 using SavingsPlatform.Contracts.Accounts.Models;
 using SavingsPlatform.Contracts.Accounts.Requests;
 
@@ -28,6 +29,32 @@ public class ExchangeRatesModule : ICarterModule
                     DateTime.UtcNow));
 
         }).WithTags(["exchange-rates"]);
-    }
 
+        app.MapPost("v1/currency-exchange-order", async (CurrencyExchangeOrder request, DaprWorkflowClient wfClient) =>
+        {
+            await wfClient.ScheduleNewWorkflowAsync(nameof(CurrencyExchangeWorkflow), request.OrderId, request);
+
+            await wfClient.WaitForWorkflowStartAsync(request.OrderId);
+
+           return Results.Accepted($"v1/currency-exchange-order/{request.OrderId}");
+        }).WithTags(["currency-exchange"]);
+
+        app.MapGet("v1/currency-exchange-order/{orderId}", async (string orderId, DaprWorkflowClient wfClient) =>
+        {
+            var state = await wfClient.GetWorkflowStateAsync(orderId);
+
+            if (state is null)
+            {
+                return Results.NotFound();
+            }
+            else if (state.IsWorkflowCompleted)
+            {
+                return Results.Ok(new { Status = state.RuntimeStatus });
+            }
+
+            return Results.Accepted($"v1/currency-exchange-order/{orderId}");
+        }).WithTags(["currency-exchange"]);
+
+        app.MapGet("/healthz", () => Results.Ok()).WithTags(["platform"]);
+    }
 }

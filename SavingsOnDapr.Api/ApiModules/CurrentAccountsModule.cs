@@ -42,7 +42,7 @@ public class CurrentAccountsModule : ICarterModule
             {
                 var cmdId = request.MsgId ?? Guid.NewGuid().ToString();
                 await publishingService.PublishCommand(
-                    new CreditAccountCommand(cmdId, request.ExternalRef, request.Amount, DateTime.UtcNow, AccountType.CurrentAccount, null));
+                    new CreditAccountCommand(cmdId, request.ExternalRef, request.Amount, DateTime.UtcNow, AccountType.CurrentAccount, request.TransferId));
 
                 return Results.Accepted($"/api/platform/savings-account/command/{cmdId}");
             }).WithTags(["accounts"]);
@@ -53,7 +53,7 @@ public class CurrentAccountsModule : ICarterModule
             {
                 var cmdId = request.MsgId ?? Guid.NewGuid().ToString();
                 await publishingService.PublishCommand(
-                    new DebitAccountCommand(cmdId, request.ExternalRef, request.Amount, DateTime.UtcNow, AccountType.CurrentAccount, null));
+                    new DebitAccountCommand(cmdId, request.ExternalRef, request.Amount, DateTime.UtcNow, AccountType.CurrentAccount, request.TransferId));
 
                 return Results.Accepted($"/api/platform/savings-account/command/{cmdId}");
             }).WithTags(["accounts"]);

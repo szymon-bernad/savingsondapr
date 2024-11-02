@@ -9,10 +9,10 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["CurrencyExchange.Api/CurrencyExchange.Api.csproj", "CurrencyExchange.Api/"]
-RUN dotnet restore "./CurrencyExchange.Api/CurrencyExchange.Api.csproj"
+COPY ["CurrencyExchange.Api.csproj", "."]
+RUN dotnet restore "./CurrencyExchange.Api.csproj"
 COPY . .
-WORKDIR "/src/CurrencyExchange.Api"
+WORKDIR "/src/."
 RUN dotnet build "./CurrencyExchange.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish

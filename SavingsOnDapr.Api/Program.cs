@@ -1,6 +1,5 @@
 using Carter;
 using Marten;
-using Marten.Services;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using SavingsOnDapr.Api;

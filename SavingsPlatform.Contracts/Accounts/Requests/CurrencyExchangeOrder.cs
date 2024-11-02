@@ -3,6 +3,7 @@
 namespace SavingsPlatform.Contracts.Accounts.Requests;
 
 public record CurrencyExchangeOrder(
+    string OrderId,
     string DebtorExternalRef,
     string BeneficiaryExternalRef,
     Currency SourceCurrency,

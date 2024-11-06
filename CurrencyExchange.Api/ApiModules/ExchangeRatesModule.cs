@@ -1,5 +1,6 @@
 ﻿using Carter;
 using CurrencyExchange.Api.Internal;
+using Dapr.Client;
 using Dapr.Workflow;
 using SavingsPlatform.Contracts.Accounts.Models;
 using SavingsPlatform.Contracts.Accounts.Requests;
@@ -49,7 +50,12 @@ public class ExchangeRatesModule : ICarterModule
             }
             else if (state.IsWorkflowCompleted)
             {
-                return Results.Ok(new { Status = state.RuntimeStatus });
+                return Results.Ok(
+                    new 
+                    {
+                        Status = Enum.GetName<WorkflowRuntimeStatus>(state.RuntimeStatus),
+                        Details = state.ReadOutputAs<ExchangeResult>()
+                    });
             }
 
             return Results.Accepted($"v1/currency-exchange-order/{orderId}");

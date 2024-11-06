@@ -81,7 +81,7 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
             return;
         }
 
-        var eventsToPublish = PrepareForCredit(request.Amount, request.TransferRef);
+        var eventsToPublish = PrepareForCredit(request.Amount, request.TransferRef, request.MsgId);
 
         if (_state!.TotalBalance == 0m)
         {
@@ -126,7 +126,7 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
             return;
         }
 
-        var eventsToPublish = PrepareForDebit(request.Amount, request.TransferRef);
+        var eventsToPublish = PrepareForDebit(request.Amount, request.TransferRef, request.MsgId);
 
         _state = _state with
         {

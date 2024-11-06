@@ -11,6 +11,12 @@ using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+
 var jsonOptions = new JsonSerializerOptions
 {
     PropertyNameCaseInsensitive = true
@@ -52,8 +58,9 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.MapCarter();
+app.MapSubscribeHandler();
 app.UseHttpsRedirection();
-
+app.UseCloudEvents();
 app.Run();
 
 var wfc = app.Services.GetRequiredService<DaprWorkflowClient>();

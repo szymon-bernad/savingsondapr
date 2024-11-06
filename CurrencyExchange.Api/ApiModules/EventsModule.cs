@@ -17,23 +17,25 @@ public class EventsModule : ICarterModule
                DaprWorkflowClient daprClient,
                ILogger<EventsModule> logger) =>
              {
-                 logger.LogInformation($"Handling debited event [AccountRef = {@event}, TransferId = {@event.TransferId}]");
-                 if (@event.TransferId != null)
-                 {
-                     await daprClient.RaiseEventAsync(@event.TransferId, "accountdebited", @event);
-                 }
+                 logger.LogInformation($"Handling debited event [AccountRef = {@event.ExternalRef}]");
+                 if (!string.IsNullOrEmpty(@event.OperationId) && @event.OperationId.Contains('^'))
+                {
+                    var instanceId = @event.OperationId[..@event.OperationId.LastIndexOf('^')];
+                    await daprClient.RaiseEventAsync(instanceId, "accountdebited", @event);
+                }
              }).WithTags(["events"]);
 
         app.MapPost("v1/events/:handle-credited-event",
              [Topic("pubsub", "accountcredited")]
-                async (AccountDebited @event,
+                async (AccountCredited @event,
                DaprWorkflowClient daprClient,
                ILogger<EventsModule> logger) =>
              {
-                 logger.LogInformation($"Handling debited event [AccountRef = {@event}, TransferId = {@event.TransferId}]");
-                 if (@event.TransferId != null)
+                 logger.LogInformation($"Handling credited event [AccountRef = {@event.ExternalRef}]");
+                 if (!string.IsNullOrEmpty(@event.OperationId) && @event.OperationId.Contains('^'))
                  {
-                     await daprClient.RaiseEventAsync(@event.TransferId, "accountcredited", @event);
+                     var instanceId = @event.OperationId[..@event.OperationId.LastIndexOf('^')];
+                     await daprClient.RaiseEventAsync(instanceId, "accountcredited", @event);
                  }
              }).WithTags(["events"]);
     }

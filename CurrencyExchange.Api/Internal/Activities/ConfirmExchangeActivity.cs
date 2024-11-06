@@ -13,33 +13,12 @@ public class ConfirmExchangeActivity(IExchangeRatesService exchangeRatesService)
     {
         var result = input.OrderType switch
         {
-            ExchangeOrderType.GuaranteedRate => RunForGuaranteed(input),
             ExchangeOrderType.MarketRate     => RunForMarketRate(input),
             ExchangeOrderType.LimitOrder     => RunForLimitOrder(input),
             _ => throw new NotImplementedException(),
         };
 
         return result;
-    }
-
-    private async Task<OrderConfirmationResult> RunForGuaranteed(CurrencyExchangeOrder input)
-    {
-        var rates = await _exchangeRatesService.GetCurrentRatesAsync(input.SourceCurrency, input.TargetCurrency);
-        var applicableRate = rates.ExchangeRates.FirstOrDefault(x => x.IsInRange(input.SourceAmount));
-
-        if (applicableRate is not null && input.ExchangeRate.HasValue)
-        {
-            var diff = Math.Abs(applicableRate.Rate - input.ExchangeRate.Value) / input.ExchangeRate.Value;
-            if (diff <= 0.1m)
-            {
-                return new OrderConfirmationResult(
-                    ConfirmationStatus.Confirmed,
-                    Guid.NewGuid().ToString(),
-                    input.ExchangeRate,
-                    input.ExchangeRate * input.SourceAmount);
-            }
-        }
-        return new OrderConfirmationResult(ConfirmationStatus.Deferred);
     }
 
     private async Task<OrderConfirmationResult> RunForMarketRate(CurrencyExchangeOrder input)
@@ -50,10 +29,10 @@ public class ConfirmExchangeActivity(IExchangeRatesService exchangeRatesService)
         if (applicableRate is not null)
         {
             return new OrderConfirmationResult(
-                ConfirmationStatus.Confirmed, 
-                Guid.NewGuid().ToString(), 
+                ConfirmationStatus.Confirmed,
+                Guid.NewGuid().ToString(),
                 applicableRate.Rate,
-                applicableRate.Rate * input.SourceAmount);
+                Math.Round(applicableRate.Rate * input.SourceAmount, 2, MidpointRounding.ToEven));
         }
 
         return new OrderConfirmationResult(ConfirmationStatus.Rejected);
@@ -66,14 +45,14 @@ public class ConfirmExchangeActivity(IExchangeRatesService exchangeRatesService)
 
         if (applicableRate is not null && input.ExchangeRate.HasValue)
         {
-            var diff = (applicableRate.Rate - input.ExchangeRate.Value) / input.ExchangeRate.Value;
-            if (diff <= 0.02m)
+            var diff = (input.ExchangeRate.Value - applicableRate.Rate) / input.ExchangeRate.Value;
+            if (diff <= 0m)
             {
                 return new OrderConfirmationResult(
                     ConfirmationStatus.Confirmed,
                     Guid.NewGuid().ToString(),
                     input.ExchangeRate,
-                    input.ExchangeRate.Value * input.SourceAmount);
+                    Math.Round(applicableRate.Rate * input.SourceAmount, 2, MidpointRounding.ToEven));
             }
         }
         return new OrderConfirmationResult(ConfirmationStatus.Deferred);

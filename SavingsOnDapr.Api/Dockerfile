@@ -9,15 +9,15 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["SavingsOnDapr.Api.csproj", "."]
-RUN dotnet restore "./SavingsOnDapr.Api.csproj"
+COPY ["SavingsOnDapr.Api/SavingsOnDapr.Api.csproj", "SavingsOnDapr.Api/"]
+RUN dotnet restore "SavingsOnDapr.Api/SavingsOnDapr.Api.csproj"
 COPY . .
 WORKDIR "/src/."
-RUN dotnet build "./SavingsOnDapr.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "SavingsOnDapr.Api/SavingsOnDapr.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./SavingsOnDapr.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "SavingsOnDapr.Api/SavingsOnDapr.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

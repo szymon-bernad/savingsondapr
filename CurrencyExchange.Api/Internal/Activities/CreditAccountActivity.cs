@@ -5,13 +5,13 @@ using SavingsPlatform.Contracts.Accounts.Requests;
 namespace CurrencyExchange.Api.Internal.Activities;
 
 public class CreditAccountActivity(IAccountsApiClient accountsApiClient)
-    : WorkflowActivity<DebitAccount, bool>
+    : WorkflowActivity<CreditAccount, bool>
 {
     private readonly IAccountsApiClient _accountsApiClient = accountsApiClient;
 
-    public override async Task<bool> RunAsync(WorkflowActivityContext context, DebitAccount input)
+    public override async Task<bool> RunAsync(WorkflowActivityContext context, CreditAccount input)
     {
-        await _accountsApiClient.DebitAccountAsync(input);
+        await _accountsApiClient.CreditAccountAsync(input);
 
         return true;
     }

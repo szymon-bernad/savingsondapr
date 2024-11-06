@@ -2,7 +2,7 @@
 
 namespace SavingsPlatform.Contracts.Accounts.Models;
 
-public record ExchangeResult(bool Succeceeded, string? Message, ExchangeReceipt? Receipt);
+public record ExchangeResult(bool Succeeded, string? Message, ExchangeReceipt? Receipt);
 
 public record ExchangeReceipt(
     decimal TargetAmount,

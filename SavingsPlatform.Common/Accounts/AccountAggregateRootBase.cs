@@ -56,7 +56,7 @@ namespace SavingsPlatform.Common.Accounts
             }
         }
 
-        protected ICollection<object> PrepareForCredit(decimal amount, string? transferRef)
+        protected ICollection<object> PrepareForCredit(decimal amount, string? transferRef, string? msgId)
         {
             if (_state is null)
             {
@@ -80,6 +80,7 @@ namespace SavingsPlatform.Common.Accounts
                 _state.ExternalRef,
                 _state.Key,
                 amount,
+                msgId,
                 transferRef,
                 DateTime.UtcNow,
                 _state.TotalBalance + amount,
@@ -90,7 +91,7 @@ namespace SavingsPlatform.Common.Accounts
             return eventsToPublish;
         }
 
-        protected ICollection<object>? PrepareForDebit(decimal amount, string? transferRef)
+        protected ICollection<object>? PrepareForDebit(decimal amount, string? transferRef, string? msgId)
         {
             if (_state is null)
             {
@@ -116,6 +117,7 @@ namespace SavingsPlatform.Common.Accounts
                 _state.ExternalRef,
                 _state.Key,
                 amount,
+                msgId,
                 transferRef,
                 DateTime.UtcNow,
                 _state.TotalBalance - amount,

@@ -31,7 +31,7 @@ public class CurrentAccountsModule : ICarterModule
                     return Results.BadRequest("Current Account already exists.");
                 }
 
-                await publishingService.PublishCommand(new CreateCurrentAccountCommand(Guid.NewGuid().ToString(), request.ExternalRef));
+                await publishingService.PublishCommand(new CreateCurrentAccountCommand(Guid.NewGuid().ToString(), request.ExternalRef, request.AccountCurrency));
 
                 return Results.Accepted($"/api/accounts/{request.ExternalRef}");
             }).WithTags(["accounts"]);

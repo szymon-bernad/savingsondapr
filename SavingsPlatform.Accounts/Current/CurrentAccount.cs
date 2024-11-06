@@ -76,7 +76,7 @@ public class CurrentAccount : AccountAggregateRootBase<CurrentAccountState>
             return;
         }
 
-        var eventsToPublish = PrepareForCredit(request.Amount, request.TransferRef);
+        var eventsToPublish = PrepareForCredit(request.Amount, request.TransferRef, request.MsgId);
 
         _state = _state with
         {
@@ -100,7 +100,7 @@ public class CurrentAccount : AccountAggregateRootBase<CurrentAccountState>
             return;
         }
 
-        var eventsToPublish = PrepareForDebit(request.Amount, request.TransferRef);
+        var eventsToPublish = PrepareForDebit(request.Amount, request.TransferRef, request.MsgId);
 
         _state = _state with
         {

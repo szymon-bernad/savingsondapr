@@ -62,5 +62,3 @@ app.MapSubscribeHandler();
 app.UseHttpsRedirection();
 app.UseCloudEvents();
 app.Run();
-
-var wfc = app.Services.GetRequiredService<DaprWorkflowClient>();

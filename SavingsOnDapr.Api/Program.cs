@@ -1,3 +1,4 @@
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Carter;
 using Marten;
 using OpenTelemetry.Resources;
@@ -45,12 +46,20 @@ builder.Services.AddMarten(options =>
     })
     .BuildSessionsWith<CustomSessionFactory>();
 
-builder.Services.AddOpenTelemetry()
-    .WithTracing(builder => builder
-        .AddAspNetCoreInstrumentation()
-        .ConfigureResource(r => r.AddService("savings-accounts"))
-        .AddConsoleExporter()
-        .AddZipkinExporter());
+    builder.Logging.AddOpenTelemetry(x =>
+    {
+        x.IncludeScopes = true;
+        x.IncludeFormattedMessage = true;
+    });
+    builder.Services.AddOpenTelemetry()
+        .UseAzureMonitor()
+        .WithTracing(tracing =>
+        {
+            tracing.AddAspNetCoreInstrumentation()
+                   .AddHttpClientInstrumentation()
+                   .ConfigureResource(r => r.AddService("savings-accounts"))
+                   .AddConsoleExporter();
+        });
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

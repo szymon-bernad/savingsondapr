@@ -1,3 +1,5 @@
+using Azure.Monitor.OpenTelemetry.AspNetCore;
+using Carter;
 using Marten;
 using System.Text.Json.Serialization;
 using System.Text.Json;
@@ -47,11 +49,20 @@ var daprHttpPort = Environment.GetEnvironmentVariable("DAPR_HTTP_PORT") ?? throw
 builder.Services.AddDaprClient(dpr => { dpr.UseJsonSerializationOptions(jsonOptions); });
 builder.Services.AddCarter();
 
+builder.Logging.AddOpenTelemetry(x =>
+{
+    x.IncludeScopes = true;
+    x.IncludeFormattedMessage = true;
+});
 builder.Services.AddOpenTelemetry()
-    .WithTracing(builder => 
-        builder.AddAspNetCoreInstrumentation()
-        .ConfigureResource(r => r.AddService("savings-eventstore"))
-        .AddZipkinExporter());
+    .UseAzureMonitor()
+    .WithTracing(tracing =>
+    {
+        tracing.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .ConfigureResource(r => r.AddService("savings-eventstore"))
+               .AddConsoleExporter();
+    });
 
 var app = builder.Build();
 

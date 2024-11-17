@@ -6,12 +6,15 @@ using System.Text.Json;
 using Weasel.Core;
 using Microsoft.AspNetCore.Http.Json;
 using Carter;
+using Marten;
 using Marten.Events;
-using SavingsOnDapr.EventStore.Store;
-using Microsoft.Extensions.Options;
-using SavingsPlatform.Contracts.Accounts.Models;
-using OpenTelemetry.Trace;
 using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using SavingsOnDapr.EventStore.Store;
+using SavingsPlatform.Contracts.Accounts.Models;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Weasel.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 

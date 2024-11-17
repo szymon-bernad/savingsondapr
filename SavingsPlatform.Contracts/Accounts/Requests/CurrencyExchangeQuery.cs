@@ -2,4 +2,4 @@
 
 namespace SavingsPlatform.Contracts.Accounts.Requests;
 
-public record CreateCurrentAccount(string ExternalRef, Currency AccountCurrency);
+public record CurrencyExchangeQuery(Currency Source, Currency Target, decimal Amount);

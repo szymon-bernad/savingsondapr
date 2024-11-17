@@ -46,6 +46,24 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  currencyexchange.api:
+    build:
+      context: .
+      dockerfile: ./CurrencyExchange.Api/Dockerfile
+    depends_on:
+      - postgres
+  
+  currencyexchange.api-dapr:
+    image: "daprio/daprd:1.14.2"
+    network_mode: "service:currencyexchange.api"
+    depends_on:
+      postgres:
+        condition: service_started
+      currencyexchange.api:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+  
   savingsondapr.eventstore:
     build:
       context: .

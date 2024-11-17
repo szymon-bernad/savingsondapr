@@ -10,14 +10,15 @@ using System.Threading.Tasks;
 namespace SavingsPlatform.Contracts.Accounts.Events
 {
     public record AccountDebited(
-    string Id,
-    string ExternalRef,
-    string AccountId,
-    decimal Amount,
-    string? TransferId,
-    DateTime Timestamp,
-    decimal TotalBalance,
-    string EvtType,
-    AccountType AccountType,
-    string CurrentAccountId) : IEvent;
+        string Id,
+        string ExternalRef,
+        string AccountId,
+        decimal Amount,
+        string? OperationId,
+        string? TransferId,
+        DateTime Timestamp,
+        decimal TotalBalance,
+        string EvtType,
+        AccountType AccountType,
+        string CurrentAccountId) : IEvent;
 }

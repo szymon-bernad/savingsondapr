@@ -1,5 +1,12 @@
 version: '3.4'
 services:
+
+
+  placement:
+    command: ["./placement", "-port", "50000", "-log-level", "debug"]
+    ports:
+      - "50000:50000"
+
   savingsondapr.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -12,16 +19,38 @@ services:
     ports:
       - "5136:8080"
 
-  placement:
-    command: ["./placement", "-port", "50000", "-log-level", "debug"]
-    ports:
-      - "50000:50000"
-
   savingsondapr.api-dapr:
     command: ["./daprd",
       "--app-id", "dapr-savings-api",
       "--app-port", "8080",
       "--dapr-http-port", "3605",
+      "--app-protocol", "http",
+      "--enable-app-health-check",
+      "--app-health-check-path", "/healthz",
+      "--placement-host-address", "placement:50000",
+      "--resources-path", "/components",
+      "-config", "/configuration/config.yaml"
+      ]
+    volumes:
+      - "./dapr/components/:/components"
+      - "./dapr/configuration:/configuration"
+ 
+  currencyexchange.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - DAPR_HTTP_PORT=3607
+      - NAMESPACE=savings
+      - AccountsApiConfig__AccountsApiServiceName=dapr-savings-api
+      - OTEL_EXPORTER_ZIPKIN_ENDPOINT=http://zipkin:9411/api/v2/spans
+    ports:
+      - "5156:8080"
+  
+  currencyexchange.api-dapr:
+    command: ["./daprd",
+      "--app-id", "dapr-exchange-api",
+      "--app-port", "8080",
+      "--dapr-http-port", "3607",
       "--app-protocol", "http",
       "--enable-app-health-check",
       "--app-health-check-path", "/healthz",
@@ -49,7 +78,7 @@ services:
       - OTEL_EXPORTER_ZIPKIN_ENDPOINT=http://zipkin:9411/api/v2/spans
     ports:
       - "5163:8080"
-
+ 
   savingsondapr.eventstore-dapr:
     command: ["./daprd",
       "--app-id", "dapr-savings-evt",

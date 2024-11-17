@@ -33,7 +33,7 @@ public class AccountHierarchyEventStore(IDocumentStore documentStore)
                 session.Events.Append(streamId, streamState.Version + newEvents.Count(), newEvents);
             }
 
-            session.Store<EventStatusEntry>(newEvents.Select(e => new EventStatusEntry { EventId = e.Id }));
+            session.Store(newEvents.Select(e => new EventStatusEntry { EventId = e.Id }));
 
             await session.SaveChangesAsync(cancellationToken);
         }

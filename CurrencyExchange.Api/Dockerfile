@@ -9,17 +9,17 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["SavingsOnDapr.EventStore/SavingsOnDapr.EventStore.csproj", "SavingsOnDapr.EventStore/"]
-RUN dotnet restore "SavingsOnDapr.EventStore/SavingsOnDapr.EventStore.csproj"
+COPY ["CurrencyExchange.Api/CurrencyExchange.Api.csproj", "CurrencyExchange.Api/"]
+RUN dotnet restore "CurrencyExchange.Api/CurrencyExchange.Api.csproj"
 COPY . .
 WORKDIR "/src/."
-RUN dotnet build "SavingsOnDapr.EventStore/SavingsOnDapr.EventStore.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "CurrencyExchange.Api/CurrencyExchange.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "SavingsOnDapr.EventStore/SavingsOnDapr.EventStore.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "CurrencyExchange.Api/CurrencyExchange.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "SavingsOnDapr.EventStore.dll"]
+ENTRYPOINT ["dotnet", "CurrencyExchange.Api.dll"]

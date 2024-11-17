@@ -45,6 +45,7 @@ public class CurrentAccount : AccountAggregateRootBase<CurrentAccountState>
                 accountId,
                 accountId,
                 AccountType.CurrentAccount,
+                request.AccountCurrency,
                 DateTime.UtcNow,
                 typeof(AccountCreated).Name)
         };
@@ -55,6 +56,7 @@ public class CurrentAccount : AccountAggregateRootBase<CurrentAccountState>
             ExternalRef = request.ExternalRef,
             OpenedOn = DateTime.UtcNow,
             TotalBalance = 0m,
+            Currency = request.AccountCurrency,
             HasUnpublishedEvents = true,
             UnpublishedEvents = eventsToPub,
         };
@@ -74,7 +76,7 @@ public class CurrentAccount : AccountAggregateRootBase<CurrentAccountState>
             return;
         }
 
-        var eventsToPublish = PrepareForCredit(request.Amount, request.TransferRef);
+        var eventsToPublish = PrepareForCredit(request.Amount, request.TransferRef, request.MsgId);
 
         _state = _state with
         {
@@ -98,7 +100,7 @@ public class CurrentAccount : AccountAggregateRootBase<CurrentAccountState>
             return;
         }
 
-        var eventsToPublish = PrepareForDebit(request.Amount, request.TransferRef);
+        var eventsToPublish = PrepareForDebit(request.Amount, request.TransferRef, request.MsgId);
 
         _state = _state with
         {

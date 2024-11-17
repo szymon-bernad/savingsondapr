@@ -40,8 +40,8 @@ public class PlatformModule : ICarterModule
                         {
                             var actorInstance = actorProxyFactory.CreateActorProxy<IDepositTransferActor>(
                                 new ActorId(@event.TransferId),
-                                nameof(DepositTransferActor));
-                       
+                                nameof(DepositTransferActor),
+                                new ActorProxyOptions { });
                             await actorInstance.HandleDebitedEventAsync(@event.AccountId);
                         }
                     }).WithTags(["platform"]); ;
@@ -57,7 +57,7 @@ public class PlatformModule : ICarterModule
 
                             await actorInstance.HandleCreditedEventAsync(@event.AccountId);
                         }
-                    }).WithTags(["platform"]); ;
+                    }).WithTags(["platform"]);
 
 
         app.MapPost("/api/platform/commands",

@@ -60,6 +60,11 @@ builder.Services.AddMarten(options =>
                    .ConfigureResource(r => r.AddService("savings-accounts"))
                    .AddConsoleExporter();
         });
+builder.Services.AddLogging(cfg =>
+{
+    cfg.AddConsole();
+});
+
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

@@ -128,6 +128,8 @@ namespace SavingsPlatform.Common.Accounts
 
         public async Task TryUpdateAsync(string? msgId)
         {
+            _logger?.LogInformation("Trying update for {Key} with {MsgId}.", _state!.Key, msgId ?? string.Empty);
+
             var msgEntry = msgId is not null ?
                 new Contracts.Accounts.MessageProcessedEntry
                 {

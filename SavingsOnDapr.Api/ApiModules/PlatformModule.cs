@@ -6,6 +6,7 @@ using MediatR;
 using SavingsPlatform.Accounts.Actors;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
+using SavingsPlatform.Accounts.Current.Models;
 using SavingsPlatform.Common.Interfaces;
 using SavingsPlatform.Common.Services;
 using SavingsPlatform.Contracts.Accounts.Commands;
@@ -83,7 +84,7 @@ public class PlatformModule : ICarterModule
                         }
                         catch (Exception ex)
                         {
-                            logger.LogError($"Error processing command: {ex.Message}");
+                            logger.LogError($"Error processing command with Id = {evt.MsgId}: {ex.Message}");
                             throw;
                         }
                     }).WithTags(["platform"]);
@@ -121,6 +122,21 @@ public class PlatformModule : ICarterModule
                 return Results.NotFound();
             }
         }).WithTags(["platform"]);
+
+        app.MapGet("/api/platform/accounts/command/{msgid}",
+            async (string msgid, IStateEntryRepository<CurrentAccountState> repo) =>
+            {
+                var result = (await repo.IsMessageProcessed(msgid));
+
+                if (result)
+                {
+                    return Results.Ok(new { MsgId = msgid, Status = "Processed" });
+                }
+                else
+                {
+                    return Results.NotFound();
+                }
+            }).WithTags(["platform"]);
 
         app.MapPost("/api/platform/accrue-interest",
         async (IStateEntryQueryHandler<InstantAccessSavingsAccountState> iasaRepository,

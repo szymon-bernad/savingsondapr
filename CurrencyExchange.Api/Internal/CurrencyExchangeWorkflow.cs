@@ -8,6 +8,8 @@ namespace CurrencyExchange.Api.Internal;
 
 public class CurrencyExchangeWorkflow : Workflow<CurrencyExchangeOrder, ExchangeResult>
 {
+    private const int ActivityRetriesCount = 3;
+
     public override async Task<ExchangeResult> RunAsync(WorkflowContext context, CurrencyExchangeOrder input)
     {
         var confirmationStep = await context.CallActivityAsync<OrderConfirmationResult>(nameof(ConfirmExchangeActivity), input);
@@ -28,50 +30,90 @@ public class CurrencyExchangeWorkflow : Workflow<CurrencyExchangeOrder, Exchange
         }
         else
         {
-            var debitStep = await context.CallActivityAsync<bool>(
-                nameof(DebitAccountActivity),
-                new DebitAccount(
-                    input.DebtorExternalRef,
-                    input.SourceAmount,
-                    DateTime.UtcNow,
-                    $"{context.InstanceId}^1",
-                    null));
-
-            AccountDebited? ev = null;
-            try
+            var debitStep = await RunWithRetries(context, async ctx =>
+                    await ctx.CallActivityAsync<AccountActivityResult>(
+                        nameof(DebitAccountActivity),
+                        new DebitAccount(
+                            input.DebtorExternalRef,
+                            input.SourceAmount,
+                            DateTime.UtcNow,
+                            $"{ctx.InstanceId}^1",
+                            null)));
+            if(!debitStep.Succeeded)
             {
-                ev = await context.WaitForExternalEventAsync<AccountDebited>("accountdebited", timeout: TimeSpan.FromMinutes(30));
-            }
-            catch (TaskCanceledException ex)
-            {
-                result = new ExchangeResult(false, $"Exchange Order has been rejected: {ex.Message}", null);
+                result = new ExchangeResult(false, $"Exchange Order execution failed", null);
             }
 
             if (result is null)
             {
-                var creditStep = await context.CallActivityAsync<bool>(
-                    nameof(CreditAccountActivity),
-                    new CreditAccount(
-                        input.BeneficiaryExternalRef,
-                        confirmationStep.TargetAmount.Value,
-                        DateTime.UtcNow,
-                        $"{context.InstanceId}^2",
-                        null));
+                AccountDebited? event1 = null;
+                try
+                {
+                    event1 = await context.WaitForExternalEventAsync<AccountDebited>("accountdebited");
+                }
+                catch (TaskCanceledException ex)
+                {
+                    result = new ExchangeResult(false, $"Exchange Order has been rejected: {ex.Message}", null);
+                }
 
-                var ev2 = await context.WaitForExternalEventAsync<AccountCredited>("accountcredited");
-                result = new ExchangeResult(true,
-                                $"Exchange Order has been fulfilled",
-                                new ExchangeReceipt(
-                                    confirmationStep.TargetAmount.Value,
-                                    confirmationStep.EffectiveRate.Value,
-                                    DateTime.UtcNow,
-                                    context.InstanceId,
+                if (result is null)
+                {
+                    var creditStep = await RunWithRetries(context, async ctx =>
+                        await ctx.CallActivityAsync<AccountActivityResult>(
+                            nameof(CreditAccountActivity),
+                            new CreditAccount(
+                                input.BeneficiaryExternalRef,
+                                confirmationStep.TargetAmount.Value,
+                                DateTime.UtcNow,
+                                $"{context.InstanceId}^2",
+                                null)));
+                    if (!creditStep.Succeeded)
+                    {
+                        var revertStep = await RunWithRetries(context, async ctx =>
+                            await ctx.CallActivityAsync<AccountActivityResult>(
+                                nameof(CreditAccountActivity),
+                                new CreditAccount(
                                     input.DebtorExternalRef,
-                                    input.BeneficiaryExternalRef,
-                                    input.SourceCurrency,
-                                    input.TargetCurrency));
+                                    input.SourceAmount,
+                                    DateTime.UtcNow,
+                                    $"{ctx.InstanceId}^revert",
+                                    null)));
+                    }
+
+                    var event2 = await context.WaitForExternalEventAsync<AccountCredited>("accountcredited");
+                    if (input.BeneficiaryExternalRef.Equals(event2.ExternalRef, StringComparison.Ordinal))
+                    {
+                        result = new ExchangeResult(true,
+                            $"Exchange Order has been fulfilled",
+                            new ExchangeReceipt(
+                                confirmationStep.TargetAmount.Value,
+                                confirmationStep.EffectiveRate.Value,
+                                DateTime.UtcNow,
+                                context.InstanceId,
+                                input.DebtorExternalRef,
+                                input.BeneficiaryExternalRef,
+                                input.SourceCurrency,
+                                input.TargetCurrency));
+                    }
+
+                    result ??= new ExchangeResult(false, $"Exchange Order execution failed", null);
+                }
             }
         }
+        return result;
+    }
+
+    private async Task<AccountActivityResult> RunWithRetries(WorkflowContext context, Func<WorkflowContext, Task<AccountActivityResult>> funcToRun)
+    {
+        var attempt = 0;
+        var result = await funcToRun(context);
+
+        while (!result.Succeeded && result.IsRetriable && attempt < ActivityRetriesCount)
+        {
+            ++attempt;
+            result = await funcToRun(context);
+        }
+
         return result;
     }
 }

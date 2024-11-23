@@ -5,14 +5,21 @@ using SavingsPlatform.Contracts.Accounts.Requests;
 namespace CurrencyExchange.Api.Internal.Activities;
 
 public class CreditAccountActivity(IAccountsApiClient accountsApiClient)
-    : WorkflowActivity<CreditAccount, bool>
+    : WorkflowActivity<CreditAccount, AccountActivityResult>
 {
     private readonly IAccountsApiClient _accountsApiClient = accountsApiClient;
 
-    public override async Task<bool> RunAsync(WorkflowActivityContext context, CreditAccount input)
+    public override async Task<AccountActivityResult> RunAsync(WorkflowActivityContext context, CreditAccount input)
     {
-        await _accountsApiClient.CreditAccountAsync(input);
+        try
+        {
+            await _accountsApiClient.CreditAccountAsync(input);
+        }
+        catch (Exception ex)
+        {
+            return new AccountActivityResult(false, $"{ex}", true);
+        }
 
-        return true;
+        return new AccountActivityResult(true);
     }
 }

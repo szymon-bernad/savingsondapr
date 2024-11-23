@@ -77,21 +77,46 @@ Invoke-Expression $pushcmd
 $Env:EVT_IMGVER = ('0.{0}' -f $verNo)
 Pop-Location
 
+### currencyexchange.api
+$apiVerCmd = 'docker images savingsondapr.currencyexchange --format "{{.Tag}}"'
+$verNo = GetContainerVer($apiVerCmd)
+if ($verNo -eq '')
+{
+	$verNo = 0
+}
+
+Push-Location -Path ..\CurrencyExchange.Api
+
+$path = Get-Location
+
+$path = $path.ToString().Replace('\','\\')
+$buildcmd = ('docker build -t "savingsondapr.currencyexchange:0.{0}" -f ./Dockerfile ..' -f (++$verNo))
+
+Invoke-Expression $buildcmd
+$targetImg = ('{0}.azurecr.io/savingsondapr.currencyexchange:0.{1}' -f $ContainerRegName, $verNo)
+$tagcmd = ('docker tag savingsondapr.currencyexchange:0.{0} {1}' -f $verNo, $targetImg)
+Invoke-Expression $tagcmd
+$pushcmd = ('docker push {0}' -f $targetImg)
+Invoke-Expression $pushcmd
+
+$Env:EXCH_IMGVER = ('0.{0}' -f $verNo)
+Pop-Location
+
 if ($DeployToAzEnv)
 {
-	$rgExists = (az group exists -n savings-platform-poc-rg)
+	$rgExists = (az group exists -n acaenv1-resg)
 	Write-Output $rgExists
 	if ($rgExists -eq 'false')
 	{
 		Write-Output 'Creating resource-group...'
-		az group create -n savings-platform-poc-rg --location westeurope
+		az group create -n acaenv1-resg --location 'Poland Central'
 	}
 	
 	do {
-		$rgExists = (az group exists -n savings-platform-poc-rg)
+		$rgExists = (az group exists -n acaenv1-resg)
 		Start-Sleep -Seconds 1
 	}
 	while ($rgExists -eq 'false')
 	
-	az deployment group create --name savings-platform-deploy2 --resource-group savings-platform-poc-rg --template-file main.bicep --parameters main.params.bicepparam
+	az deployment group create --name savings-platform-deploy3 --resource-group acaenv1-resg --template-file main.bicep --parameters main.params.bicepparam
 }

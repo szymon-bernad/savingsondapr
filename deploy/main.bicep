@@ -1,16 +1,25 @@
 param appname string = 'sod'
 param location string = resourceGroup().location
+
 param containerRegistryName string = 'mainazsub1'
 param keyVaultName string = 'main-kv-101'
-param apiImgVer string = '0.4'
-param eventImgVer string = '0.1'
+param apiImgVer string = ''
+param eventImgVer string = ''
+param exchImgVer string = ''
+
 param backendApiPort int = 8080
 param coreResourceGroupName string = 'main-resg'
+
 param spApiImage string = 'savingsondapr.api'
 param eventStoreImage string = 'savingsondapr.eventstore'
+param exchApiImage string = 'savingsondapr.currencyexchange'
+
 param apiAppName string = 'savingsondapr-api'
 param eventStoreAppName string = 'savings-eventstore'
+param exchAppName string = 'savingsondapr-exchange'
+
 param identityName string = 'savingsondapr-idntty'
+
 
 @secure()
 param sbconnstr string
@@ -103,7 +112,7 @@ module spApiApp 'container-app.bicep' = {
   }
 }
 
-// SavingAccounts API App
+// EventStore App
 module eventStoreApiApp 'container-app.bicep' = {
   name: '${deployment().name}--eventstore'
   dependsOn: [
@@ -159,6 +168,57 @@ module eventStoreApiApp 'container-app.bicep' = {
   }
 }
 
+// SavingAccounts API App
+module exchApiApp 'container-app.bicep' = {
+  name: '${deployment().name}--exch'
+  dependsOn: [
+    environment
+  ]
+  params: {
+    enableIngress: true
+    isExternalIngress: true
+    location: location
+    environmentName: environment.outputs.acaEnvironmentName
+    containerAppName: exchAppName
+    containerImage: '${containerRegistry.properties.loginServer}/${exchApiImage}:${exchImgVer}'
+    targetPort: backendApiPort
+    minReplicas: 1
+    maxReplicas: 1
+    containerRegistryServer: containerRegistry.properties.loginServer
+    identityName: identityName
+    revisionMode: 'Single'
+    secretsRefList: [
+      {
+        name: 'appinsconnstr'
+        keyVaultUrl: 'https://${keyVaultName}.vault.azure.net/secrets/appinsconnstr'
+        identity: identity.id
+      }
+    ]
+    envVarsList: [ 
+      {
+        name: 'DAPR_HTTP_PORT'
+        value: '3500'
+      }
+      {
+        name: 'NAMESPACE'
+        value: 'savings'
+      }
+      {
+        name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+        secretRef: 'appinsconnstr'
+      }
+      {
+        name: 'ASPNETCORE_URLS'
+        value: 'http://+:8080'
+      }
+      {
+        name: 'AccountsApiConfig__AccountsApiServiceName'
+        value: apiAppName
+      }
+    ]
+  }
+}
+
 ////Statestore Component
 resource statestoreDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
   name: '${environmentName}/statestore-postgres'
@@ -186,6 +246,7 @@ resource statestoreDaprComponent 'Microsoft.App/managedEnvironments/daprComponen
       } ]
     scopes: [
       apiAppName
+      exchAppName
     ]
   }
 }
@@ -214,6 +275,7 @@ resource pubsubServicebusDaprComponent 'Microsoft.App/managedEnvironments/daprCo
     scopes: [
       apiAppName
       eventStoreAppName
+      exchAppName
     ]
   }
 }

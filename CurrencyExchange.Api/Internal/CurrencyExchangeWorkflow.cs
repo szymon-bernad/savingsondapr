@@ -38,7 +38,7 @@ public class CurrencyExchangeWorkflow : Workflow<CurrencyExchangeOrder, Exchange
         return result;
     }
 
-    private async Task<ExchangeResult> RunExchangeTransfer(WorkflowContext context, CurrencyExchangeOrder input, OrderConfirmationResult confirmationStep)
+    private async Task<ExchangeResult?> RunExchangeTransfer(WorkflowContext context, CurrencyExchangeOrder input, OrderConfirmationResult confirmationStep)
     {
         ExchangeResult? result = null;
         var debitStep = await context.CallActivityAsync<AccountActivityResult>(

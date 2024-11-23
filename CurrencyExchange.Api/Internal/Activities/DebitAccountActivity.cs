@@ -5,20 +5,10 @@ using SavingsPlatform.Contracts.Accounts.Requests;
 namespace CurrencyExchange.Api.Internal.Activities;
 
 public class DebitAccountActivity(IAccountsApiClient accountsApiClient)
-    : WorkflowActivity<DebitAccount, AccountActivityResult>
+    : AccountActivityBase<DebitAccount>
 {
     private readonly IAccountsApiClient _accountsApiClient = accountsApiClient;
 
-    public override async Task<AccountActivityResult> RunAsync(WorkflowActivityContext context, DebitAccount input)
-    {
-        try { 
-            await _accountsApiClient.DebitAccountAsync(input);
-        }
-        catch (Exception ex)
-        {
-            return new AccountActivityResult(false, $"{ex}", true);
-        }
-
-        return new AccountActivityResult(true);
-    }
+    public override Task<AccountActivityResult> RunAsync(WorkflowActivityContext context, DebitAccount input)
+        => RunWithRetries(async () => await _accountsApiClient.DebitAccountAsync(input));
 }

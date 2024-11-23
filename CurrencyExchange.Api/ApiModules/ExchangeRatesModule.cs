@@ -9,7 +9,6 @@ namespace CurrencyExchange.Api.ApiModules;
 
 public class ExchangeRatesModule : ICarterModule
 {
-
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         app.MapPost("v1/currency-exchange-query", async (CurrencyExchangeQuery query, IExchangeRatesService exchangeRatesService) =>
@@ -29,6 +28,12 @@ public class ExchangeRatesModule : ICarterModule
                     $"{query.Source} => {query.Target}",
                     DateTime.UtcNow));
 
+        }).WithTags(["exchange-rates"]);
+
+        app.MapPost("v1/currency-exchange-rate", async (CurrencyExchangeBaseRateRequest req, IExchangeRatesService exchangeRatesService) =>
+        {
+            var exchangeRates = await exchangeRatesService.SetExchangeBaseRateAsync(req.Source, req.Target, req.BaseRate);
+            return Results.Ok(exchangeRates);
         }).WithTags(["exchange-rates"]);
 
         app.MapPost("v1/currency-exchange-order", async (CurrencyExchangeOrder request, DaprWorkflowClient wfClient) =>

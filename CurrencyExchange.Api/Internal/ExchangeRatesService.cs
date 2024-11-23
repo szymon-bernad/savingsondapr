@@ -9,7 +9,7 @@ internal class ExchangeRatesService : IExchangeRatesService
     private readonly IMemoryCache _cache;
     private readonly Random _random = new Random();
 
-    private static readonly IDictionary<string, decimal> BaseRatesDict = new Dictionary<string, decimal>
+    private IDictionary<string, decimal> BaseRatesDict = new Dictionary<string, decimal>
     {
         { $"{Currency.USD}-{Currency.EUR}", 0.9m },
         { $"{Currency.EUR}-{Currency.USD}", 1.1m },
@@ -32,9 +32,9 @@ internal class ExchangeRatesService : IExchangeRatesService
         _cache = cache;
     }
 
-    public Task<ExchangeRatesData> GetCurrentRatesAsync(Currency source, Currency target)
+    public Task<ExchangeRatesData> GetCurrentRatesAsync(Currency source, Currency target, bool refreshCache = false)
     {
-        if (_cache.TryGetValue($"{source}-{target}", out ExchangeRateEntry[]? rates))
+        if (!refreshCache && _cache.TryGetValue($"{source}-{target}", out ExchangeRateEntry[]? rates))
         {
             return Task.FromResult(
                 new ExchangeRatesData 
@@ -50,11 +50,11 @@ internal class ExchangeRatesService : IExchangeRatesService
             var variableRate = (decimal)((_random.NextDouble() - 0.5) * 0.05);
             var exchangeRates = new[]
             {
-                new ExchangeRateEntry(0, 1000, Math.Round((1.08m+variableRate)*baseRate,4,MidpointRounding.ToPositiveInfinity)),
-                new ExchangeRateEntry(1000, 5000, Math.Round((1.06m+variableRate)*baseRate,4,MidpointRounding.ToPositiveInfinity)),
-                new ExchangeRateEntry(5000, 50_000, Math.Round((1.05m+variableRate)*baseRate,4,MidpointRounding.ToPositiveInfinity)),
-                new ExchangeRateEntry(50_000, 500_000, Math.Round((1.04m+variableRate)*baseRate,4,MidpointRounding.ToPositiveInfinity)),
-                new ExchangeRateEntry(500_000, 1_999_999, Math.Round((1.02m+variableRate)*baseRate,4,MidpointRounding.ToPositiveInfinity)),
+                new ExchangeRateEntry(0, 1000, Math.Round((0.985m+variableRate)*baseRate,4,MidpointRounding.ToPositiveInfinity)),
+                new ExchangeRateEntry(1000, 5000, Math.Round((1.005m+variableRate)*baseRate,4,MidpointRounding.ToPositiveInfinity)),
+                new ExchangeRateEntry(5000, 50_000, Math.Round((1.025m+variableRate)*baseRate,4,MidpointRounding.ToPositiveInfinity)),
+                new ExchangeRateEntry(50_000, 500_000, Math.Round((1.044m+variableRate)*baseRate,4,MidpointRounding.ToPositiveInfinity)),
+                new ExchangeRateEntry(500_000, 1_999_999, Math.Round((1.055m+variableRate)*baseRate,4,MidpointRounding.ToPositiveInfinity)),
             };
 
             _cache.Set($"{source}-{target}", exchangeRates, TimeSpan.FromMinutes(10));
@@ -66,6 +66,13 @@ internal class ExchangeRatesService : IExchangeRatesService
                     TargetCurrency = target,
                     ExchangeRates = exchangeRates.OrderBy(r => r.LowerBound).ToList(),
                 });
-}
+        }
+    }
+
+    public Task<ExchangeRatesData> SetExchangeBaseRateAsync(Currency source, Currency target, decimal rate)
+    {
+        BaseRatesDict[$"{source}-{target}"] = rate;
+
+        return GetCurrentRatesAsync(source, target, true);
     }
 }

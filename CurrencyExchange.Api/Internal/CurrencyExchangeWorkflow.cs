@@ -58,6 +58,7 @@ public class CurrencyExchangeWorkflow : Workflow<CurrencyExchangeOrder, Exchange
 
                 if (result is null)
                 {
+                    AccountActivityResult? revertStep = null;
                     var creditStep = await RunWithRetries(context, async ctx =>
                         await ctx.CallActivityAsync<AccountActivityResult>(
                             nameof(CreditAccountActivity),
@@ -69,7 +70,7 @@ public class CurrencyExchangeWorkflow : Workflow<CurrencyExchangeOrder, Exchange
                                 null)));
                     if (!creditStep.Succeeded)
                     {
-                        var revertStep = await RunWithRetries(context, async ctx =>
+                        revertStep = await RunWithRetries(context, async ctx =>
                             await ctx.CallActivityAsync<AccountActivityResult>(
                                 nameof(CreditAccountActivity),
                                 new CreditAccount(
@@ -80,20 +81,28 @@ public class CurrencyExchangeWorkflow : Workflow<CurrencyExchangeOrder, Exchange
                                     null)));
                     }
 
-                    var event2 = await context.WaitForExternalEventAsync<AccountCredited>("accountcredited");
-                    if (input.BeneficiaryExternalRef.Equals(event2.ExternalRef, StringComparison.Ordinal))
+                    if (creditStep.Succeeded || (revertStep?.Succeeded ?? false))
                     {
-                        result = new ExchangeResult(true,
-                            $"Exchange Order has been fulfilled",
-                            new ExchangeReceipt(
-                                confirmationStep.TargetAmount.Value,
-                                confirmationStep.EffectiveRate.Value,
-                                DateTime.UtcNow,
-                                context.InstanceId,
-                                input.DebtorExternalRef,
-                                input.BeneficiaryExternalRef,
-                                input.SourceCurrency,
-                                input.TargetCurrency));
+                        var event2 = await context.WaitForExternalEventAsync<AccountCredited>("accountcredited");
+                        if (creditStep.Succeeded && input.BeneficiaryExternalRef.Equals(event2.ExternalRef, StringComparison.Ordinal))
+                        {
+                            result = new ExchangeResult(true,
+                                $"Exchange Order has been fulfilled",
+                                new ExchangeReceipt(
+                                    confirmationStep.TargetAmount.Value,
+                                    confirmationStep.EffectiveRate.Value,
+                                    DateTime.UtcNow,
+                                    context.InstanceId,
+                                    input.DebtorExternalRef,
+                                    input.BeneficiaryExternalRef,
+                                    input.SourceCurrency,
+                                    input.TargetCurrency));
+                        }  
+                    }
+
+                    if (revertStep is not null && !revertStep.Succeeded)
+                    {
+                        result = new ExchangeResult(false, $"Exchange Order execution failed - revert might be required", null);
                     }
 
                     result ??= new ExchangeResult(false, $"Exchange Order execution failed", null);

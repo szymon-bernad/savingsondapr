@@ -34,6 +34,18 @@ public class CurrencyExchangeWorkflowTests
         Assert.True(result.Succeeded);
         Assert.Equal(0.755m, result.Receipt!.ExchangeRate);
         Assert.Equal(1010m, result.Receipt!.TargetAmount);
+
+        await ctx.Received(1).CallActivityAsync<AccountActivityResult>(
+            nameof(DebitAccountActivity),
+             Arg.Is<DebitAccount>(c => debtorExtRef.Equals(c.ExternalRef, StringComparison.Ordinal)));
+
+        await ctx.Received(1).CallActivityAsync<AccountActivityResult>(
+            nameof(CreditAccountActivity),
+            Arg.Is<CreditAccount>(c => beneficiaryExtRef.Equals(c.ExternalRef, StringComparison.Ordinal)));
+
+        await ctx.Received(1).WaitForExternalEventAsync<AccountDebited>("accountdebited");
+
+        await ctx.Received(1).WaitForExternalEventAsync<AccountCredited>("accountcredited");
     }
 
     [Theory]

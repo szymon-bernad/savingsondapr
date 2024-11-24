@@ -44,22 +44,22 @@ builder.Services.AddMarten(options =>
         options.Schema.For<AggregateState<InstantAccessSavingsAccountState>>().UseOptimisticConcurrency(true);
         options.Schema.For<AggregateState<CurrentAccountState>>().UseOptimisticConcurrency(true);
     })
-    .BuildSessionsWith<CustomSessionFactory>();
+ .BuildSessionsWith<CustomSessionFactory>();
 
-    builder.Logging.AddOpenTelemetry(x =>
+ builder.Logging.AddOpenTelemetry(x =>
+ {
+     x.IncludeScopes = true;
+     x.IncludeFormattedMessage = true;
+ });
+builder.Services.AddOpenTelemetry()
+    .UseAzureMonitor()
+    .WithTracing(tracing =>
     {
-        x.IncludeScopes = true;
-        x.IncludeFormattedMessage = true;
+        tracing.AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation()
+                .ConfigureResource(r => r.AddService("savings-accounts"))
+                .AddConsoleExporter();
     });
-    builder.Services.AddOpenTelemetry()
-        .UseAzureMonitor()
-        .WithTracing(tracing =>
-        {
-            tracing.AddAspNetCoreInstrumentation()
-                   .AddHttpClientInstrumentation()
-                   .ConfigureResource(r => r.AddService("savings-accounts"))
-                   .AddConsoleExporter();
-        });
 builder.Services.AddLogging(cfg =>
 {
     cfg.AddConsole();

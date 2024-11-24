@@ -1,5 +1,6 @@
 param(
  [string]$ContainerRegName,
+ [string]$ResGroupName,
  [switch]$DoAzLogin,
  [switch]$DeployToAzEnv)
  
@@ -104,19 +105,22 @@ Pop-Location
 
 if ($DeployToAzEnv)
 {
-	$rgExists = (az group exists -n acaenv1-resg)
-	Write-Output $rgExists
-	if ($rgExists -eq 'false')
+	$rgExistsExpr = ('az group exists -n {0}' -f $ResGroupName)
+	$rgExists = (Invoke-Expression $rgExistsExpr | Out-String)
+
+	if ($rgExists.Trim() -eq "false")
 	{
 		Write-Output 'Creating resource-group...'
-		az group create -n acaenv1-resg --location 'Poland Central'
+		$createRgExpr = ('az group create -n {0} --location "Poland Central"' -f $ResGroupName)
+		Invoke-Expression $createRgExpr
 	}
 	
 	do {
-		$rgExists = (az group exists -n acaenv1-resg)
+		$rgExists = (Invoke-Expression $rgExistsExpr | Out-String)
 		Start-Sleep -Seconds 1
 	}
-	while ($rgExists -eq 'false')
+	while ($rgExists.Trim() -eq "false")
 	
-	az deployment group create --name savings-platform-deploy3 --resource-group acaenv1-resg --template-file main.bicep --parameters main.params.bicepparam
+	$runDeploymentExpr = ('az deployment group create --name {0}-dplmnt --resource-group {0} --template-file main.bicep --parameters main.params.bicepparam' -f $ResGroupName)
+	Invoke-Expression $runDeploymentExpr
 }

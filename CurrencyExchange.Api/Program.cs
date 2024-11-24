@@ -8,6 +8,7 @@ using SavingsPlatform.Common.Config;
 using CurrencyExchange.Api.ApiClients;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,12 +38,17 @@ builder.Services.AddDaprWorkflow(opts =>
 });
 builder.Services.Configure<AccountsApiConfig>(builder.Configuration.GetSection("AccountsApiConfig"));
 builder.Services.AddScoped<IAccountsApiClient, AccountsApiClient>();
+builder.Logging.AddOpenTelemetry(x =>
+{
+    x.IncludeScopes = true;
+    x.IncludeFormattedMessage = true;
+});
 
 builder.Services.AddOpenTelemetry()
+    .UseAzureMonitor()
     .WithTracing(builder => builder
         .AddAspNetCoreInstrumentation()
-        .ConfigureResource(r => r.AddService("currency-exchange"))
-        .AddZipkinExporter());
+        .ConfigureResource(r => r.AddService("currency-exchange")));
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

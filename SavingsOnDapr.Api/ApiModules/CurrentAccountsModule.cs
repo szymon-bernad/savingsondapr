@@ -1,4 +1,5 @@
 ﻿using Carter;
+using Microsoft.Extensions.Logging;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Accounts.Current.Models;
 using SavingsPlatform.Common.Interfaces;
@@ -38,24 +39,29 @@ public class CurrentAccountsModule : ICarterModule
 
         app.MapPost("/api/accounts/:credit",
             async (IEventPublishingService publishingService,
-                    CreditAccount request) =>
+                    CreditAccount request,
+                    ILogger<CurrentAccountsModule> logger) =>
             {
                 var cmdId = request.MsgId ?? Guid.NewGuid().ToString();
+                logger.LogInformation($"Processing credit request for {request.ExternalRef} with CmdId = {cmdId}.");
+
                 await publishingService.PublishCommand(
                     new CreditAccountCommand(cmdId, request.ExternalRef, request.Amount, DateTime.UtcNow, AccountType.CurrentAccount, request.TransferId));
 
-                return Results.Accepted($"/api/platform/savings-account/command/{cmdId}");
+                return Results.Accepted($"/api/platform/accounts/command/{cmdId}");
             }).WithTags(["accounts"]);
 
         app.MapPost("/api/accounts/:debit",
             async (IEventPublishingService publishingService,
-                    DebitAccount request) =>
+                    DebitAccount request,
+                    ILogger<CurrentAccountsModule> logger) =>
             {
                 var cmdId = request.MsgId ?? Guid.NewGuid().ToString();
+                logger.LogInformation($"Processing debit request for {request.ExternalRef} with CmdId = {cmdId}.");
                 await publishingService.PublishCommand(
                     new DebitAccountCommand(cmdId, request.ExternalRef, request.Amount, DateTime.UtcNow, AccountType.CurrentAccount, request.TransferId));
 
-                return Results.Accepted($"/api/platform/savings-account/command/{cmdId}");
+                return Results.Accepted($"/api/platform/accounts/command/{cmdId}");
             }).WithTags(["accounts"]);
     }
 }

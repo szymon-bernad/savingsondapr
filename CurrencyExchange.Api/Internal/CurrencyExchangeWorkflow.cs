@@ -3,6 +3,7 @@ using Dapr.Workflow;
 using SavingsPlatform.Contracts.Accounts.Events;
 using SavingsPlatform.Contracts.Accounts.Models;
 using SavingsPlatform.Contracts.Accounts.Requests;
+using static FastExpressionCompiler.ExpressionCompiler;
 
 namespace CurrencyExchange.Api.Internal;
 
@@ -14,7 +15,7 @@ public class CurrencyExchangeWorkflow : Workflow<CurrencyExchangeOrder, Exchange
 
         while (confirmationStep.Status == ConfirmationStatus.Deferred)
         {
-            await context.CreateTimer(TimeSpan.FromMinutes(3));
+            await context.CreateTimer(TimeSpan.FromMinutes(1));
             confirmationStep = await context.CallActivityAsync<OrderConfirmationResult>(nameof(ConfirmExchangeActivity), input);
         }
 
@@ -28,50 +29,84 @@ public class CurrencyExchangeWorkflow : Workflow<CurrencyExchangeOrder, Exchange
         }
         else
         {
-            var debitStep = await context.CallActivityAsync<bool>(
-                nameof(DebitAccountActivity),
-                new DebitAccount(
-                    input.DebtorExternalRef,
-                    input.SourceAmount,
-                    DateTime.UtcNow,
-                    $"{context.InstanceId}^1",
-                    null));
+            result = await RunExchangeTransfer(context, input, confirmationStep);
+            result ??= new ExchangeResult(false, $"Exchange Order execution failed.", null);
+        }
 
-            AccountDebited? ev = null;
-            try
-            {
-                ev = await context.WaitForExternalEventAsync<AccountDebited>("accountdebited", timeout: TimeSpan.FromMinutes(30));
-            }
-            catch (TaskCanceledException ex)
-            {
-                result = new ExchangeResult(false, $"Exchange Order has been rejected: {ex.Message}", null);
-            }
+        return result;
+    }
 
-            if (result is null)
-            {
-                var creditStep = await context.CallActivityAsync<bool>(
+    private async Task<ExchangeResult?> RunExchangeTransfer(
+        WorkflowContext context,
+        CurrencyExchangeOrder input,
+        OrderConfirmationResult confirmationStep)
+    {
+        ExchangeResult? result = null;
+        var debitStep = await context.CallActivityAsync<AccountActivityResult>(
+                                nameof(DebitAccountActivity),
+                                new DebitAccount(
+                                    input.DebtorExternalRef,
+                                    input.SourceAmount,
+                                    DateTime.UtcNow,
+                                    $"{context.InstanceId}^1",
+                                    null));
+        if (!debitStep.Succeeded)
+        {
+            result = new ExchangeResult(false, $"Exchange Order execution failed", null);
+        }
+
+        if (result is null)
+        {
+            var event1 = await context.WaitForExternalEventAsync<AccountDebited>("accountdebited");
+
+            var creditStep = await context.CallActivityAsync<AccountActivityResult>(
                     nameof(CreditAccountActivity),
                     new CreditAccount(
                         input.BeneficiaryExternalRef,
-                        confirmationStep.TargetAmount.Value,
+                        confirmationStep.TargetAmount!.Value,
                         DateTime.UtcNow,
                         $"{context.InstanceId}^2",
                         null));
 
-                var ev2 = await context.WaitForExternalEventAsync<AccountCredited>("accountcredited");
-                result = new ExchangeResult(true,
-                                $"Exchange Order has been fulfilled",
-                                new ExchangeReceipt(
-                                    confirmationStep.TargetAmount.Value,
-                                    confirmationStep.EffectiveRate.Value,
-                                    DateTime.UtcNow,
-                                    context.InstanceId,
-                                    input.DebtorExternalRef,
-                                    input.BeneficiaryExternalRef,
-                                    input.SourceCurrency,
-                                    input.TargetCurrency));
+            AccountActivityResult? revertStep = null;
+            if (!creditStep.Succeeded)
+            {
+                revertStep = await context.CallActivityAsync<AccountActivityResult>(
+                        nameof(CreditAccountActivity),
+                        new CreditAccount(
+                            input.DebtorExternalRef,
+                            input.SourceAmount,
+                            DateTime.UtcNow,
+                            $"{context.InstanceId}^revert",
+                            null));
+            }
+
+            if (creditStep.Succeeded || (revertStep?.Succeeded ?? false))
+            {
+                var event2 = await context.WaitForExternalEventAsync<AccountCredited>("accountcredited");
+                if (creditStep.Succeeded &&
+                    input.BeneficiaryExternalRef.Equals(event2.ExternalRef, StringComparison.Ordinal))
+                {
+                    result = new ExchangeResult(true,
+                        $"Exchange Order has been fulfilled",
+                        new ExchangeReceipt(
+                            confirmationStep.TargetAmount.Value,
+                            confirmationStep.EffectiveRate!.Value,
+                            DateTime.UtcNow,
+                            context.InstanceId,
+                            input.DebtorExternalRef,
+                            input.BeneficiaryExternalRef,
+                            input.SourceCurrency,
+                            input.TargetCurrency));
+                }
+            }
+
+            if (revertStep is not null && !revertStep.Succeeded)
+            {
+                result = new ExchangeResult(false, $"Exchange Order execution failed. Compensation Step might be required.", null);
             }
         }
+
         return result;
     }
 }

@@ -32,7 +32,9 @@ namespace SavingsPlatform.Common.Helpers
                 }
             
                 await keySemaphore.WaitAsync();
-                await action();
+
+                var task = action();
+                await task;
             }
             finally
             {

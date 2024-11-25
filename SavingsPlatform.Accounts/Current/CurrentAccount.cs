@@ -1,4 +1,5 @@
-﻿using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
+﻿using Microsoft.Extensions.Logging;
+using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Accounts.Current.Models;
 using SavingsPlatform.Common.Accounts;
 using SavingsPlatform.Common.Interfaces;
@@ -13,8 +14,9 @@ public class CurrentAccount : AccountAggregateRootBase<CurrentAccountState>
 {
     public CurrentAccount(
         IStateEntryRepository<CurrentAccountState> repository,
-        CurrentAccountState? state = default)
-        : base(repository, state)
+        CurrentAccountState? state,
+        ILogger<CurrentAccount> logger)
+        : base(repository, state, logger)
     {
 
     }

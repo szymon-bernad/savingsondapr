@@ -1,0 +1,160 @@
+@hostSavings=REDACTED
+@hostExchange=REDACTED
+
+###
+# @name createUsdAccount
+
+{{
+  exports.usdAccRef = "testacc-usd-{{$guid}}"
+}}
+
+POST {{hostSavings}}/api/accounts
+Content-Type: application/json
+Accept: application/json
+
+{
+  "externalRef" : "{{usdAccRef}}",
+  "accountCurrency" : "USD"
+}
+
+{{
+    exports.usdAccHeader = response.headers['location'];
+}}
+
+###
+# @ref createUsdAccount
+# @name checkUsdAccount
+
+GET {{hostSavings}}{{usdAccHeader}}
+
+?? status == 200
+###
+# @name creditUsdAccount
+# @ref checkUsdAccount
+
+
+POST {{hostSavings}}/api/accounts/:credit
+Content-Type: application/json
+Accept: application/json
+
+{
+  "externalRef" : "{{checkUsdAccount[0].externalRef}}",
+  "amount" : 12001.00,
+  "transactionDate" : "2024-11-24T16:55:08.808Z"
+}
+
+###
+# @name createEurAccount
+
+{{
+  exports.eurRef = "testacc-eur-{{$guid}}"
+}}
+
+POST {{hostSavings}}/api/accounts
+Content-Type: application/json
+Accept: application/json
+
+{
+  "externalRef" : "{{eurRef}}",
+  "accountCurrency" : "EUR"
+}
+
+{{
+    exports.eurAccHeader = response.headers['location'];
+}}
+
+?? status == 202
+
+###
+# @ref createEurAccount
+# @name checkEurAccount
+
+GET {{hostSavings}}{{eurAccHeader}}
+
+?? status == 200
+
+###
+# @name exchquery
+
+POST {{hostExchange}}/v1/currency-exchange-query
+Content-Type: application/json
+Accept: application/json
+
+{
+    "source" : "USD",
+    "target" : "EUR",
+    "amount" : 6000
+}
+
+?? status == 200
+?? body contains rate
+?? js response.parsedBody.exchangeType == USD => EUR
+
+###
+# @ref exchquery
+# @ref checkUsdAccount
+# @ref checkEurAccount
+# @name exchorder
+
+{{
+  exports.requestedRate = exchquery.rate + 0.2;
+}}
+POST {{hostExchange}}/v1/currency-exchange-order
+Content-Type: application/json
+Accept: application/json
+
+{
+  "orderId": "limitorder-{{$guid}}",
+  "debtorExternalRef": "{{checkUsdAccount[0].externalRef}}",
+  "beneficiaryExternalRef": "{{checkEurAccount[0].externalRef}}",
+  "sourceCurrency": "USD",
+  "targetCurrency": "EUR",
+  "sourceAmount": 6000.50,
+  "exchangeRate": {{requestedRate}},
+  "orderType": "LimitOrder"
+}
+
+{{
+    exports.exchorderloc = response.headers['location'];
+}}
+
+?? status == 202
+?? header location exists
+
+###
+# @ref exchorder
+# @name exchorderstatus1
+# @sleep 100
+
+GET {{hostExchange}}/{{exchorderloc}}
+Accept: application/json
+
+?? status == 202
+
+###
+# @name exchRateModify
+# @ref exchorder
+
+{{
+  exports.modRate = requestedRate + 0.15;
+}}
+POST {{hostExchange}}/v1/currency-exchange-rate
+Content-Type: application/json
+Accept: application/json
+
+{
+  "source": "USD",
+  "target": "EUR",
+  "baseRate": {{modRate}}
+}
+
+###
+# @ref exchorder
+# @name exchorderstatus2
+# @sleep 75_000
+
+GET {{hostExchange}}/{{exchorderloc}}
+Accept: application/json
+
+?? status == 200
+?? js response.parsedBody.status == Completed

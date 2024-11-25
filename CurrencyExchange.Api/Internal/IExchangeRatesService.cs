@@ -5,5 +5,7 @@ namespace CurrencyExchange.Api.Internal;
 
 public interface IExchangeRatesService
 {
-    Task<ExchangeRatesData> GetCurrentRatesAsync(Currency source, Currency target);
+    Task<ExchangeRatesData> SetExchangeBaseRateAsync(Currency source, Currency target, decimal rate);
+
+    Task<ExchangeRatesData> GetCurrentRatesAsync(Currency source, Currency target, bool refreshCache = false);
 }

@@ -12,6 +12,5 @@ namespace SavingsPlatform.Contracts.Accounts.Enums
     {
         SavingsAccount,
         CurrentAccount,
-        SettlementAccount,
     }
 }

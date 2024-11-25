@@ -1,5 +1,6 @@
 param(
  [string]$ContainerRegName,
+ [string]$ResGroupName,
  [switch]$DoAzLogin,
  [switch]$DeployToAzEnv)
  
@@ -77,21 +78,49 @@ Invoke-Expression $pushcmd
 $Env:EVT_IMGVER = ('0.{0}' -f $verNo)
 Pop-Location
 
+### currencyexchange.api
+$apiVerCmd = 'docker images savingsondapr.currencyexchange --format "{{.Tag}}"'
+$verNo = GetContainerVer($apiVerCmd)
+if ($verNo -eq '')
+{
+	$verNo = 0
+}
+
+Push-Location -Path ..\CurrencyExchange.Api
+
+$path = Get-Location
+
+$path = $path.ToString().Replace('\','\\')
+$buildcmd = ('docker build -t "savingsondapr.currencyexchange:0.{0}" -f ./Dockerfile ..' -f (++$verNo))
+
+Invoke-Expression $buildcmd
+$targetImg = ('{0}.azurecr.io/savingsondapr.currencyexchange:0.{1}' -f $ContainerRegName, $verNo)
+$tagcmd = ('docker tag savingsondapr.currencyexchange:0.{0} {1}' -f $verNo, $targetImg)
+Invoke-Expression $tagcmd
+$pushcmd = ('docker push {0}' -f $targetImg)
+Invoke-Expression $pushcmd
+
+$Env:EXCH_IMGVER = ('0.{0}' -f $verNo)
+Pop-Location
+
 if ($DeployToAzEnv)
 {
-	$rgExists = (az group exists -n savings-platform-poc-rg)
-	Write-Output $rgExists
-	if ($rgExists -eq 'false')
+	$rgExistsExpr = ('az group exists -n {0}' -f $ResGroupName)
+	$rgExists = (Invoke-Expression $rgExistsExpr | Out-String)
+
+	if ($rgExists.Trim() -eq "false")
 	{
 		Write-Output 'Creating resource-group...'
-		az group create -n savings-platform-poc-rg --location westeurope
+		$createRgExpr = ('az group create -n {0} --location "Poland Central"' -f $ResGroupName)
+		Invoke-Expression $createRgExpr
 	}
 	
 	do {
-		$rgExists = (az group exists -n savings-platform-poc-rg)
+		$rgExists = (Invoke-Expression $rgExistsExpr | Out-String)
 		Start-Sleep -Seconds 1
 	}
-	while ($rgExists -eq 'false')
+	while ($rgExists.Trim() -eq "false")
 	
-	az deployment group create --name savings-platform-deploy2 --resource-group savings-platform-poc-rg --template-file main.bicep --parameters main.params.bicepparam
+	$runDeploymentExpr = ('az deployment group create --name {0}-dplmnt --resource-group {0} --template-file main.bicep --parameters main.params.bicepparam' -f $ResGroupName)
+	Invoke-Expression $runDeploymentExpr
 }

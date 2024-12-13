@@ -9,6 +9,7 @@ using CurrencyExchange.Api.ApiClients;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
+using Azure.Monitor.OpenTelemetry.Exporter;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,7 +49,9 @@ builder.Services.AddOpenTelemetry()
     .UseAzureMonitor()
     .WithTracing(builder => builder
         .AddAspNetCoreInstrumentation()
-        .ConfigureResource(r => r.AddService("currency-exchange")));
+        .ConfigureResource(r => r.AddService("currency-exchange"))
+        .AddZipkinExporter()
+        .AddConsoleExporter());
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

@@ -2,13 +2,18 @@
 
 public record ArgsInputRecord {
 
-    public string BaseUrl { get; init; } = "http://localhost:5136/";
+    public string BaseUrl { get; init; } = "http://localhost:5136";
+
+    public string OpEndpointPath { get; init; } = "/api/accounts/";
+
+    public string StatusEndpointPath { get; init; } = "/api/accounts/";
 
     public string ExternalRef { get; init; } = string.Empty;
-    
-    public int NumberOfRequests { get; init; }
-    
-    public decimal AverageAmount { get; init; }
+
+    public int NumberOfRequests { get; init; } = 16;
+
+
+    public decimal AverageAmount { get; init; } = 255m;
     
     public char OperationType { get; init; } = 'B';
 

@@ -1,4 +1,5 @@
 ﻿using Carter;
+using Dapr.Client;
 using Microsoft.Extensions.Logging;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Accounts.Current.Models;
@@ -58,8 +59,10 @@ public class CurrentAccountsModule : ICarterModule
             {
                 var cmdId = request.MsgId ?? Guid.NewGuid().ToString();
                 logger.LogInformation($"Processing debit request for {request.ExternalRef} with CmdId = {cmdId}.");
+    
                 await publishingService.PublishCommand(
-                    new DebitAccountCommand(cmdId, request.ExternalRef, request.Amount, DateTime.UtcNow, AccountType.CurrentAccount, request.TransferId));
+                        new DebitAccountCommand(cmdId, request.ExternalRef, request.Amount, DateTime.UtcNow, AccountType.CurrentAccount, request.TransferId));
+
 
                 return Results.Accepted($"/api/platform/accounts/command/{cmdId}");
             }).WithTags(["accounts"]);

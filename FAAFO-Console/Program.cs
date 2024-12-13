@@ -7,12 +7,30 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 
 
-var argsInput = SetupRun(args);
+//var argsInput = SetupRun(args);
 
-Console.WriteLine($"Running FAAFO-Console with args: {argsInput}");
+//Console.WriteLine($"Running FAAFO-Console with args: {argsInput}");
 Console.WriteLine("##################################");
-await RunTest(argsInput);
+//await RunTest(argsInput);
 
+bool hasChanged = false;
+string lastResponse = string.Empty;
+using var httpClient = new HttpClient();
+while (!hasChanged)
+{
+    var newResponse = await httpClient.GetStringAsync("https://sod-api.yellowstone-da8942a7.polandcentral.azurecontainerapps.io/healthver");
+    Console.WriteLine($"{DateTime.UtcNow.ToString("O")}: {newResponse}");
+
+    if(lastResponse != string.Empty && lastResponse != newResponse)
+    {
+        hasChanged = true;
+    }
+    else
+    {
+        lastResponse = newResponse;
+    }
+    await Task.Delay(5_000);
+}
 #region Functions
 static async Task RunTest(ArgsInputRecord argsInput)
 {
@@ -22,11 +40,11 @@ static async Task RunTest(ArgsInputRecord argsInput)
 
     var tasks = requests.Select(r =>
     {
-        return httpClient.PostAsync($"{argsInput.BaseUrl}api/savings/savings-account/{r.OpType}",
+        return httpClient.PostAsync($"{argsInput.BaseUrl}{argsInput.OpEndpointPath}{r.OpType}",
             new StringContent(JsonSerializer.Serialize(r), Encoding.UTF8, "application/json"));
     });
 
-    var currentBalance = await GetCurrentBalance(argsInput.ExternalRef, httpClient);
+    var currentBalance = await GetCurrentBalance(argsInput, argsInput.ExternalRef, httpClient);
     var timer = new Stopwatch();
     timer.Start();
     var results = await Task.WhenAll(tasks);
@@ -35,13 +53,14 @@ static async Task RunTest(ArgsInputRecord argsInput)
     {
         Console.WriteLine("All requests succeeded");
         var urls = results.Select(r => $"{argsInput.BaseUrl}{r.Headers.Location}");
-        var expectedBalance = GetExpectedBalance(requests);
+        Console.WriteLine($"URLs: {string.Join(", ", urls)}");
 
+        var expectedBalance = GetExpectedBalance(requests);
         var q = 100;
         while (q > 0)
         {
             Console.WriteLine($"[Elapsed Time = {timer.ElapsedMilliseconds}ms], checking balance... {q} tries left");
-            var resBalance = await GetCurrentBalance(argsInput.ExternalRef, httpClient);
+            var resBalance = await GetCurrentBalance(argsInput, argsInput.ExternalRef, httpClient);
 
             var resRes = await Task.WhenAll(urls.Select(u => httpClient.GetAsync(u)));
             Console.WriteLine($"Requests not processed: {resRes.Count(r => r.StatusCode == HttpStatusCode.NotFound)}");
@@ -81,9 +100,9 @@ static decimal GetExpectedBalance(IEnumerable<Transaction> txns)
     return txns.Aggregate(0.0m, (acc, txn) => txn.OpType == ":credit" ? acc + txn.Amount : acc - txn.Amount);
 }
 
-static async Task<decimal?> GetCurrentBalance(string extRef, HttpClient httpClient)
+static async Task<decimal?> GetCurrentBalance(ArgsInputRecord argsInput, string extRef, HttpClient httpClient)
 {
-    var accRes = await httpClient.GetAsync($"http://localhost:5136/api/savings/savings-account/{extRef}");
+    var accRes = await httpClient.GetAsync($"{argsInput.BaseUrl}{argsInput.StatusEndpointPath}{extRef}");
     var balance = (await JsonSerializer.DeserializeAsync<JsonObject[]>(await accRes.Content.ReadAsStreamAsync()))?.FirstOrDefault();
 
     if (balance?.TryGetPropertyValue("totalBalance", out var totalBalance) ?? false)
@@ -109,6 +128,9 @@ static ArgsInputRecord SetupRun(string[] args)
         {
             switch (argName)
             {
+                case nameof(ArgsInputRecord.BaseUrl):
+                    argsInput = argsInput with { BaseUrl = arg };
+                    break;
                 case nameof(ArgsInputRecord.ExternalRef):
                     argsInput = argsInput with { ExternalRef = arg };
                     break;

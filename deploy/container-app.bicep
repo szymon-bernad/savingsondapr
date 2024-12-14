@@ -50,12 +50,6 @@ resource containerApp 'Microsoft.App/containerApps@2023-11-02-preview' = {
         external: isExternalIngress
         targetPort: targetPort
         transport: transport
-      //  traffic: [
-      //   {
-      //      latestRevision: true
-      //      weight: 100
-      //    }
-      //  ]
       } : null
       dapr: {
         enabled: true

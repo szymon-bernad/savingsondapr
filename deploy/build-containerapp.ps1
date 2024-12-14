@@ -1,6 +1,9 @@
 param(
- [string]$ContainerRegName,
- [string]$ResGroupName,
+[Parameter(Mandatory=$true)][string]$ContainerRegName,
+[Parameter(Mandatory=$true)][string]$ResGroupName,
+[Parameter(Mandatory=$true)] [string]$BuildDir,
+[Parameter(Mandatory=$true)][string]$AppName,
+[Parameter(Mandatory=$true)][string]$ParamsFile,
  [switch]$DoTheBuild,
  [switch]$DoAzLogin,
  [switch]$DeployToAzEnv)
@@ -15,9 +18,8 @@ if($DoAzLogin)
 $acrLoginCmd = ('az acr login -n {0}' -f $ContainerRegName)
 Invoke-Expression $acrLoginCmd
 
-### build app
-$appName = 'savingsondapr.api'
-$apiVerCmd = ('docker images {0} --format "{{{{.Tag}}}}"' -f $appName)
+### get latest version
+$apiVerCmd = ('docker images {0} --format "{{{{.Tag}}}}"' -f $AppName)
 Write-Host  ('dockerCmd: {0}' -f $ApiVerCmd)
 $verNo = GetContainerVer $apiVerCmd
 if ($verNo -eq '')
@@ -26,14 +28,17 @@ if ($verNo -eq '')
 }
 Write-Host  ('verNo: {0}' -f $verNo)
 
+### build the app
 if ($DoTheBuild)
 {
-	Push-Location -Path ..\SavingsOnDapr.Api
-	
-	BuildContainerApp $appName $ContainerRegName $verNo
-	
+	Push-Location -Path $BuildDir
+	$verRef = ([ref]$verNo)
+	BuildContainerApp -appName $appName -containerRegName $ContainerRegName -verNo $verRef
+	$Env:APP_IMGVER = ('0.{0}' -f $verRef.value)
 	Pop-Location
 }
+
+### run deployment to ACA
 if ($DeployToAzEnv)
 {
 	$rgExistsExpr = ('az group exists -n {0}' -f $ResGroupName)
@@ -46,8 +51,9 @@ if ($DeployToAzEnv)
     else 
     {
         $currentDate = Get-Date -Format "yyyy-MM-ddHHmmss"
-		$runDeploymentExpr = ('az deployment group create --name {0}-d{1} --resource-group {0} --template-file main-app-update.bicep --parameters main-app-update.params.bicepparam' -f $ResGroupName, $currentDate)
+		$runDeploymentExpr = ('az deployment group create --name {0}-d{1} `
+		--resource-group {0} --template-file app-update.bicep --parameters {2}' `
+		-f $ResGroupName, $currentDate, $ParamsFile)
 	    Invoke-Expression $runDeploymentExpr
     }
-
 }

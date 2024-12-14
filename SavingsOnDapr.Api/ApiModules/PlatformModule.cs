@@ -4,6 +4,8 @@ using Dapr.Actors;
 using Dapr.Actors.Client;
 using Dapr.Client;
 using MediatR;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SavingsPlatform.Accounts.Actors;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess;
@@ -74,14 +76,14 @@ public class PlatformModule : ICarterModule
                 if (evt is not null && evt.Data is not null)
                 {
                     var cmdString = JsonSerializer.Serialize(evt.Data);
-                    var type = Type.GetType(evt.CommandType, true);
 
-                    if type is DummyCommand.GetType()
+                    if (evt.CommandType.Equals(typeof(DummyCommand).AssemblyQualifiedName, StringComparison.Ordinal))
                     {
                         logger.LogInformation($"Received dummy command with [Id = {evt.MsgId}]");
                         return Results.NoContent();
                     }
 
+                    var type = Type.GetType(evt.CommandType, true);
                     var jsonOptions = new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
@@ -194,33 +196,39 @@ public class PlatformModule : ICarterModule
             () => Task.FromResult(Results.Accepted())).WithTags(["platform"]);
 
         app.MapGet("/healthz",
-            async (DaprClient client,
-                    IStateEntryQueryHandler<InstantAccessSavingsAccountState> iasaRepository) =>
+        async (DaprClient client,
+               ILogger<PlatformModule> logger,
+               IEventPublishingService publishingService,
+               IStateEntryQueryHandler<InstantAccessSavingsAccountState> iasaRepository) =>
+            {
+                try
                 {
-                    try
+                    var healthy = await client.CheckHealthAsync();
+
+                    if (healthy)
                     {
-                        var healthy = await client.CheckHealthAsync();
                         var dbCheck = await iasaRepository.QueryAccountsByKeyAsync(["data.type"], ["SavingsAccount"]);
 
-                        if (healthy)
-                        {
-                            await publishingService.PublishCommand(
-                                new DummyCommand(Guid.NewGuid());
+                        await publishingService.PublishCommand(
+                            new DummyCommand(Guid.NewGuid().ToString()));
 
-                            return Results.Ok();
-                        }
-                        else
-                        {
-                            return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
-                        }
+                        return Results.Ok();
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        return Results.StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+                        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
                     }
-                }).WithTags(["platform"]);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, $"Error while checking health: {ex.Message}");
+                    return Results.StatusCode(StatusCodes.Status500InternalServerError);
+                }
+            }).WithTags(["platform"]);
 
-        app.MapGet("/healthver", (IOptions<ServiceConfig> cfg) => Results.Ok(new { Version = cfg?.Value?.Version ?? "std" })).WithTags(["platform"]);
+        app.MapGet("/app-version", 
+            (IOptions<ServiceConfig> cfg) => Results.Ok(new { Version = cfg?.Value?.Version ?? "std" }))
+            .WithTags(["platform"]);
 
     }
 }

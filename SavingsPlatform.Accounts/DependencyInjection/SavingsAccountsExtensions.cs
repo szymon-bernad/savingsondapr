@@ -36,6 +36,7 @@ public static class SavingsPlatformAccountsDIExt
                 });
 
         services.Configure<EventStoreApiConfig>(config.GetSection("EventStoreApiConfig"));
+        services.Configure<ServiceConfig>(config.GetSection("ServiceConfig"));
 
         return services;
     }

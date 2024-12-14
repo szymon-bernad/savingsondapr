@@ -4,6 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FAAFOConsole;
+namespace SavingsPlatform.Contracts.Accounts.Commands;
 
-record Transaction(string ExternalRef, decimal Amount, DateTime TransactionDate, string OpType);
+public record DummyCommand(string MsgId) : ICommandRequest;

@@ -1,4 +1,5 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
+using Azure.Monitor.OpenTelemetry.Exporter;
 using Carter;
 using Marten;
 using OpenTelemetry.Resources;
@@ -58,6 +59,7 @@ builder.Services.AddOpenTelemetry()
         tracing.AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
                 .ConfigureResource(r => r.AddService("savings-accounts"))
+                .AddZipkinExporter()
                 .AddConsoleExporter();
     });
 builder.Services.AddLogging(cfg =>

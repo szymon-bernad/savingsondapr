@@ -10,6 +10,7 @@ param maxReplicas int = 1
 param envVarsList array = []
 param secretsRefList array = []
 param revisionMode string = 'Single'
+param revisionName string = 'std'
 param useProbes bool = true
 param transport string = 'auto'
 param identityName string
@@ -49,12 +50,6 @@ resource containerApp 'Microsoft.App/containerApps@2023-11-02-preview' = {
         external: isExternalIngress
         targetPort: targetPort
         transport: transport
-        traffic: [
-          {
-            latestRevision: true
-            weight: 100
-          }
-        ]
       } : null
       dapr: {
         enabled: true
@@ -65,6 +60,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-11-02-preview' = {
       }
     }
     template: {
+      revisionSuffix: revisionName
       containers: [
         {
           image: containerImage
@@ -78,11 +74,11 @@ resource containerApp 'Microsoft.App/containerApps@2023-11-02-preview' = {
                  path: '/healthz'
                  scheme: 'HTTP'
                }
-              periodSeconds: 240
-               timeoutSeconds: 5
-               initialDelaySeconds: 15
-                successThreshold: 1
-                failureThreshold: 3
+              periodSeconds: 10
+              timeoutSeconds: 10
+              initialDelaySeconds: 15
+              successThreshold: 1
+              failureThreshold: 15
             }
           ] : null
         }

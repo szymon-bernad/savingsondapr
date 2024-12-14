@@ -14,9 +14,9 @@ param spApiImage string = 'savingsondapr.api'
 param eventStoreImage string = 'savingsondapr.eventstore'
 param exchApiImage string = 'savingsondapr.currencyexchange'
 
-param apiAppName string = 'savingsondapr-api'
-param eventStoreAppName string = 'savings-eventstore'
-param exchAppName string = 'savingsondapr-exchange'
+param apiAppName string = 'sod-api'
+param eventStoreAppName string = 'sod-eventstore'
+param exchAppName string = 'sod-exchange'
 
 param identityName string = 'savingsondapr-idntty'
 
@@ -27,20 +27,21 @@ param sbconnstr string
 @secure()
 param storeconnstr string
 
-var environmentName = '${appname}-${uniqueString(deployment().name)}'
+@secure()
+param cfgconnstr string
 
+var environmentName = '${appname}-acaenv'
 
 // Container Apps Environment 
 module environment 'aca-env.bicep' = {
   dependsOn: [ ]
-  name: '${deployment().name}--acaenv'
+  name: environmentName
   params: {
     acaEnvironmentName: environmentName
     location: location
     coreResourceGroupName: coreResourceGroupName
   }
 }
-
 
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-11-01-preview' existing = {
   name: containerRegistryName
@@ -54,10 +55,8 @@ resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' 
 
 // SavingAccounts API App
 module spApiApp 'container-app.bicep' = {
-  name: '${deployment().name}--api'
-  dependsOn: [
-    environment
-  ]
+  name: '${appname}--api'
+  dependsOn: []
   params: {
     enableIngress: true
     isExternalIngress: true
@@ -70,7 +69,8 @@ module spApiApp 'container-app.bicep' = {
     maxReplicas: 1
     containerRegistryServer: containerRegistry.properties.loginServer
     identityName: identityName
-    revisionMode: 'Single'
+    revisionMode: 'Multiple'
+    revisionName: 'v-${ replace(apiImgVer, '.', '-')}'
     secretsRefList: [
       {
         name: 'docstoreconnstr'
@@ -108,16 +108,18 @@ module spApiApp 'container-app.bicep' = {
         name: 'EventStoreApiConfig__EventStoreApiServiceName'
         value: eventStoreAppName
       }
+      {
+        name: 'ServiceConfig__Version'
+        value: 'v-${apiImgVer}'
+      }
     ]
   }
 }
 
 // EventStore App
 module eventStoreApiApp 'container-app.bicep' = {
-  name: '${deployment().name}--eventstore'
-  dependsOn: [
-    environment
-  ]
+  name: '${appname}--eventstore'
+  dependsOn: []
   params: {
     enableIngress: true
     isExternalIngress: true
@@ -170,10 +172,8 @@ module eventStoreApiApp 'container-app.bicep' = {
 
 // SavingAccounts API App
 module exchApiApp 'container-app.bicep' = {
-  name: '${deployment().name}--exch'
-  dependsOn: [
-    environment
-  ]
+  name: '${appname}--exch'
+  dependsOn: []
   params: {
     enableIngress: true
     isExternalIngress: true
@@ -258,7 +258,7 @@ resource pubsubServicebusDaprComponent 'Microsoft.App/managedEnvironments/daprCo
     environment
   ]
   properties: {
-    componentType: 'pubsub.azure.servicebus'
+    componentType: 'pubsub.azure.servicebus.topics'
     version: 'v1'
     secrets: [
       {
@@ -271,6 +271,14 @@ resource pubsubServicebusDaprComponent 'Microsoft.App/managedEnvironments/daprCo
         name: 'connectionString'
         secretRef: 'sbrootconnectionstring'
       }
+      {
+        name: 'maxDeliveryCount'
+        value: '1'
+      }
+      {
+        name: 'maxRetriableErrorsPerSec'
+        value: '2'
+      }
     ]
     scopes: [
       apiAppName
@@ -279,3 +287,58 @@ resource pubsubServicebusDaprComponent 'Microsoft.App/managedEnvironments/daprCo
     ]
   }
 }
+
+//App Configuration store component
+resource appcfgDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
+  name: '${environmentName}/appcfg'
+  dependsOn: [
+    environment
+  ]
+  properties: {
+    componentType: 'configuration.azure.appconfig'
+    version: 'v1'
+    secrets: [
+      {
+        name: 'connstring'
+        value: cfgconnstr
+      }
+    ]
+    metadata: [
+      {
+        name: 'connectionString'
+        secretRef: 'connstring'
+      }
+    ]
+    scopes: [
+      apiAppName
+      eventStoreAppName
+      exchAppName
+    ]
+  }
+}
+
+resource myPubSubPolicy 'Microsoft.App/managedEnvironments/daprComponents/resiliencyPolicies@2023-11-02-preview' = {
+  name: '${environmentName}-pubsubplcy'
+  parent: pubsubServicebusDaprComponent
+  properties: {
+    outboundPolicy: {
+      httpRetryPolicy: {
+          maxRetries: 1
+          retryBackOff: {
+            initialDelayInMilliseconds: 1000
+            maxIntervalInMilliseconds: 1000
+          }
+        }
+    } 
+    inboundPolicy: {
+      httpRetryPolicy: {
+        maxRetries: 8
+        retryBackOff: {
+          initialDelayInMilliseconds: 200
+          maxIntervalInMilliseconds: 5000
+        }
+      }
+    }
+  }
+}
+

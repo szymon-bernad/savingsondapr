@@ -1,17 +1,12 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Carter;
 using Marten;
-using System.Text.Json.Serialization;
-using System.Text.Json;
-using Weasel.Core;
-using Microsoft.AspNetCore.Http.Json;
-using Carter;
-using Marten;
 using Marten.Events;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using SavingsOnDapr.EventStore.Store;
 using SavingsPlatform.Contracts.Accounts.Models;
+using SavingsPlatform.Common.Config;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Weasel.Core;
@@ -51,14 +46,17 @@ jsonOptions.Converters.Add(new JsonStringEnumConverter());
 var daprHttpPort = Environment.GetEnvironmentVariable("DAPR_HTTP_PORT") ?? throw new ApplicationException("DAPR_HTTP_PORT is not set as EnvVar");
 builder.Services.AddDaprClient(dpr => { dpr.UseJsonSerializationOptions(jsonOptions); });
 builder.Services.AddCarter();
+var svcConfig = builder.Configuration.GetSection("ServiceConfig").Get<ServiceConfig>();
 
 builder.Logging.AddOpenTelemetry(x =>
 {
     x.IncludeScopes = true;
     x.IncludeFormattedMessage = true;
 });
-builder.Services.AddOpenTelemetry()
-    .UseAzureMonitor()
+
+(svcConfig?.UseAzureMonitor ?? false ?
+    builder.Services.AddOpenTelemetry().UseAzureMonitor() :
+    builder.Services.AddOpenTelemetry())
     .WithTracing(tracing =>
     {
         tracing.AddAspNetCoreInstrumentation()

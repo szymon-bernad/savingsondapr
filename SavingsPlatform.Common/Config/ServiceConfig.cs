@@ -1,7 +1,8 @@
-﻿namespace SavingsPlatform.Common.Config
+﻿namespace SavingsPlatform.Common.Config;
+
+public class ServiceConfig
 {
-    public class ServiceConfig
-    {
-        public string Version { get; set; } = "std";
-    }
+    public string Version { get; set; } = "std";
+
+    public bool UseAzureMonitor { get; set; } = false;
 }

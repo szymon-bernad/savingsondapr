@@ -9,6 +9,7 @@ using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Accounts.Current.Models;
 using SavingsPlatform.Accounts.DependencyInjection;
 using SavingsPlatform.Accounts.Handlers;
+using SavingsPlatform.Common.Config;
 using SavingsPlatform.Common.Repositories;
 using SavingsPlatform.Contracts.Accounts;
 using SavingsPlatform.Contracts.Accounts.Commands;
@@ -33,6 +34,7 @@ builder.Services.AddDaprClient(dpr => { dpr.UseJsonSerializationOptions(jsonOpti
 
 builder.Services.AddSavingsAccounts(builder.Configuration);
 
+var svcConfig = builder.Configuration.GetSection("ServiceConfig").Get<ServiceConfig>();
 builder.Services.AddMarten(options =>
     {
         options.Connection(builder.Configuration.GetConnectionString("DocumentStore")
@@ -52,16 +54,19 @@ builder.Services.AddMarten(options =>
      x.IncludeScopes = true;
      x.IncludeFormattedMessage = true;
  });
-builder.Services.AddOpenTelemetry()
-    .UseAzureMonitor()
-    .WithTracing(tracing =>
-    {
-        tracing.AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation()
-                .ConfigureResource(r => r.AddService("savings-accounts"))
-                .AddZipkinExporter()
-                .AddConsoleExporter();
-    });
+
+(svcConfig?.UseAzureMonitor ?? false ?
+    builder.Services.AddOpenTelemetry().UseAzureMonitor() : 
+    builder.Services.AddOpenTelemetry())
+        .WithTracing(tracing =>
+        {
+            tracing.AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .ConfigureResource(r => r.AddService("savings-accounts"))
+                    .AddZipkinExporter()
+                    .AddConsoleExporter();
+        });
+
 builder.Services.AddLogging(cfg =>
 {
     cfg.AddConsole();

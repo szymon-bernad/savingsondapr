@@ -39,14 +39,17 @@ builder.Services.AddDaprWorkflow(opts =>
 });
 builder.Services.Configure<AccountsApiConfig>(builder.Configuration.GetSection("AccountsApiConfig"));
 builder.Services.AddScoped<IAccountsApiClient, AccountsApiClient>();
+var svcConfig = builder.Configuration.GetSection("ServiceConfig").Get<ServiceConfig>();
+
 builder.Logging.AddOpenTelemetry(x =>
 {
     x.IncludeScopes = true;
     x.IncludeFormattedMessage = true;
 });
 
-builder.Services.AddOpenTelemetry()
-    .UseAzureMonitor()
+(svcConfig?.UseAzureMonitor ?? false ?
+    builder.Services.AddOpenTelemetry().UseAzureMonitor() :
+    builder.Services.AddOpenTelemetry())
     .WithTracing(builder => builder
         .AddAspNetCoreInstrumentation()
         .ConfigureResource(r => r.AddService("currency-exchange"))

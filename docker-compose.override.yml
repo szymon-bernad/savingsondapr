@@ -66,7 +66,6 @@ services:
     environment:
       - POSTGRES_PASSWORD=example
       - POSTGRES_USER=postgres
-      - POSTGRES_DB=savings-store
 
   savingsondapr.eventstore:
     environment:

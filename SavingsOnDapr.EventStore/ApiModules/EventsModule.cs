@@ -1,5 +1,6 @@
 ﻿using Carter;
 using Dapr;
+using Dapr.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using SavingsOnDapr.EventStore.Store;
@@ -39,6 +40,18 @@ public class EventsModule : ICarterModule
                 AccountHierarchyEventStore store) =>
             {
                 await store.AppendEventsAsync(@event.CurrentAccountId, [@event], CancellationToken.None);
+
+                return Results.Ok();
+            });
+
+        app.MapPost("v1/events/:handle-exchange-completed-event",
+            [BulkSubscribe("currencyexchangecompleted", 16)]
+            [Topic("pubsub", "currencyexchangecompleted")] async (
+                BulkSubscribeMessage<CurrencyExchangeCompleted> @events,
+                AccountHierarchyEventStore store) =>
+            {
+                List<BulkSubscribeAppResponseEntry> responseEntries = new List<BulkSubscribeAppResponseEntry>();
+                await store.AppendEventsAsync("test-id", @events.Entries.Select(e => e.Event), CancellationToken.None);
 
                 return Results.Ok();
             });

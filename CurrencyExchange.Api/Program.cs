@@ -10,6 +10,8 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Azure.Monitor.OpenTelemetry.Exporter;
+using SavingsPlatform.Common.Services;
+using SavingsPlatform.Contracts.Accounts.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,9 +38,14 @@ builder.Services.AddDaprWorkflow(opts =>
     opts.RegisterActivity<ConfirmExchangeActivity>();
     opts.RegisterActivity<DebitAccountActivity>();
     opts.RegisterActivity<CreditAccountActivity>();
+    opts.RegisterActivity<FinalizeExchangeActivity>();
 });
+
 builder.Services.Configure<AccountsApiConfig>(builder.Configuration.GetSection("AccountsApiConfig"));
-builder.Services.AddScoped<IAccountsApiClient, AccountsApiClient>();
+builder.Services.Configure<PubSubConfig>(builder.Configuration.GetSection("PubSubConfig"));
+
+builder.Services.AddScoped<IAccountsApiClient, AccountsApiClient>()
+                .AddScoped<IEventPublishingService, DaprEventPublishingService>();
 var svcConfig = builder.Configuration.GetSection("ServiceConfig").Get<ServiceConfig>();
 
 builder.Logging.AddOpenTelemetry(x =>

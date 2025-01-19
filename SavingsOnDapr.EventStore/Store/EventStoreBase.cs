@@ -5,9 +5,9 @@ using SavingsPlatform.Contracts.Accounts.Models;
 using ISavingsEvent = SavingsPlatform.Contracts.Accounts.Interfaces.IEvent;
 using IMartenEvent = Marten.Events.IEvent;
 
-public abstract class EventStoreBase(IDocumentStore _documentStore)
+public abstract class EventStoreBase(IDocumentStore documentStore)
 {
-
+    protected readonly IDocumentStore _documentStore = documentStore;
     public async Task AppendEventsAsync(
     string streamId,
     IEnumerable<ISavingsEvent> events,

@@ -9,7 +9,6 @@ namespace SavingsOnDapr.EventStore.Store;
 
 public class AccountHierarchyEventStore(IDocumentStore documentStore) : EventStoreBase(documentStore)
 {
-    private readonly IDocumentStore _documentStore = documentStore;
 
     public async Task<AccountHierarchySummaryDto?> GetAccountHierarchySummary(string streamId, DateTime? fromDate, DateTime? toDate)
     {

@@ -30,7 +30,7 @@ public class AccountHolderModule : ICarterModule
                 var accountHolder = await factory.GetInstanceAsync();
                 await accountHolder.Create(request.Id, request.Username, request.ExternalRef, request.AccountIds);
 
-                return Results.CreatedAtRoute($"/api/account-holders/{request.Id}");
+                return Results.Created($"/api/account-holders/{request.Id}", null);
 
             }).WithTags(["account-holders"]);
     }

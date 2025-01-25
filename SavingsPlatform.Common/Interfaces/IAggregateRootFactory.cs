@@ -13,5 +13,7 @@ namespace SavingsPlatform.Common.Interfaces
         Task<T> GetInstanceAsync(string? id = default);
 
         Task<T> GetInstanceByExternalRefAsync(string externalRef);
+
+        Task<T?> TryGetInstanceAsync(string id);
     }
 }

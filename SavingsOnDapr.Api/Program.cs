@@ -5,6 +5,7 @@ using Marten;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using SavingsOnDapr.Api;
+using SavingsPlatform.Accounts.AccountHolders;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Accounts.Current.Models;
 using SavingsPlatform.Accounts.DependencyInjection;
@@ -46,6 +47,7 @@ builder.Services.AddMarten(options =>
         options.Schema.For<MessageProcessedEntry>().UseIdentityKey();
         options.Schema.For<AggregateState<InstantAccessSavingsAccountState>>().UseOptimisticConcurrency(true);
         options.Schema.For<AggregateState<CurrentAccountState>>().UseOptimisticConcurrency(true);
+        options.Schema.For<AggregateState<AccountHolderState>>().UseOptimisticConcurrency(true);
     })
  .BuildSessionsWith<CustomSessionFactory>();
 

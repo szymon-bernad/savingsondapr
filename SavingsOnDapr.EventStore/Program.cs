@@ -31,6 +31,7 @@ builder.Services.AddMarten(
     });
 
 builder.Services.AddScoped<AccountHierarchyEventStore>();
+builder.Services.AddScoped<CurrencyExchangeEventStore>();
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {

@@ -1,15 +1,16 @@
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Carter;
-using CurrencyExchange.Api.Internal;
-using System.Text.Json.Serialization;
-using System.Text.Json;
-using Dapr.Workflow;
-using CurrencyExchange.Api.Internal.Activities;
-using SavingsPlatform.Common.Config;
 using CurrencyExchange.Api.ApiClients;
+using CurrencyExchange.Api.Internal;
+using CurrencyExchange.Api.Internal.Activities;
+using Dapr.Workflow;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using Azure.Monitor.OpenTelemetry.AspNetCore;
-using Azure.Monitor.OpenTelemetry.Exporter;
+using SavingsPlatform.Common.Config;
+using SavingsPlatform.Common.Services;
+using SavingsPlatform.Contracts.Accounts.Models;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,9 +37,14 @@ builder.Services.AddDaprWorkflow(opts =>
     opts.RegisterActivity<ConfirmExchangeActivity>();
     opts.RegisterActivity<DebitAccountActivity>();
     opts.RegisterActivity<CreditAccountActivity>();
+    opts.RegisterActivity<FinalizeExchangeActivity>();
 });
+
 builder.Services.Configure<AccountsApiConfig>(builder.Configuration.GetSection("AccountsApiConfig"));
-builder.Services.AddScoped<IAccountsApiClient, AccountsApiClient>();
+builder.Services.Configure<PubSubConfig>(builder.Configuration.GetSection("PubSubConfig"));
+
+builder.Services.AddScoped<IAccountsApiClient, AccountsApiClient>()
+                .AddScoped<IEventPublishingService, DaprEventPublishingService>();
 var svcConfig = builder.Configuration.GetSection("ServiceConfig").Get<ServiceConfig>();
 
 builder.Logging.AddOpenTelemetry(x =>
@@ -59,7 +65,6 @@ builder.Logging.AddOpenTelemetry(x =>
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IExchangeRatesService, ExchangeRatesService>();
 builder.Services.AddSwaggerGen();

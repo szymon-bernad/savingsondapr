@@ -1,4 +1,5 @@
 ﻿using CurrencyExchange.Api.Internal.Activities;
+using CurrencyExchange.Api.Internal.Models;
 using Dapr.Workflow;
 using SavingsPlatform.Contracts.Accounts.Events;
 using SavingsPlatform.Contracts.Accounts.Models;
@@ -98,6 +99,10 @@ public class CurrencyExchangeWorkflow : Workflow<CurrencyExchangeOrder, Exchange
                             input.BeneficiaryExternalRef,
                             input.SourceCurrency,
                             input.TargetCurrency));
+
+                    var finalStep = await context.CallActivityAsync<AccountActivityResult>(
+                        nameof(FinalizeExchangeActivity),
+                        new CurrencyExchangeFinalState { Order = input, Result = result });
                 }
             }
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
+using SavingsPlatform.Accounts.Current;
 using SavingsPlatform.Common.Config;
 using SavingsPlatform.Common.Interfaces;
 
@@ -43,6 +44,20 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
                 return new InstantAccessSavingsAccount(_repository, _simulationConfig, stateEntry);
             }
             else throw new InvalidOperationException($"Cannot get instance with externalRef = {externalRef}");
+        }
+
+        public async Task<InstantAccessSavingsAccount?> TryGetInstanceAsync(string id)
+        {
+            if (string.IsNullOrEmpty(id?.Trim()))
+            {
+                throw new InvalidOperationException($"{nameof(id)} cannot be null or empty");
+            }
+
+            var result = await _repository.GetAccountAsync(id);
+
+            return result is not null ?
+                new InstantAccessSavingsAccount(_repository, _simulationConfig, result) :
+                null;
         }
     }
 }

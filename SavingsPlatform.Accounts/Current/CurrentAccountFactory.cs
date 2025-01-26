@@ -1,8 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using SavingsPlatform.Accounts.Aggregates.InstantAccess;
-using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Accounts.Current.Models;
-using SavingsPlatform.Common.Config;
 using SavingsPlatform.Common.Interfaces;
 
 namespace SavingsPlatform.Accounts.Current;
@@ -43,5 +40,19 @@ internal class CurrentAccountFactory : IAggregateRootFactory<CurrentAccount, Cur
         }
         
         throw new InvalidOperationException($"Cannot get instance with externalRef = {externalRef}");
+    }
+
+    public async Task<CurrentAccount?> TryGetInstanceAsync(string id)
+    {
+        if(string.IsNullOrEmpty(id?.Trim()))
+        {
+            throw new InvalidOperationException($"{nameof(id)} cannot be null or empty");
+        }
+
+        var result = await _repository.GetAccountAsync(id);
+
+        return result is not null ?
+            new CurrentAccount(_repository, result, _logger) :
+            null;
     }
 }

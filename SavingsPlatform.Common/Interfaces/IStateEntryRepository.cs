@@ -5,6 +5,9 @@ namespace SavingsPlatform.Common.Interfaces;
 public interface IStateEntryQueryHandler<T> where T : IAggregateStateEntry
 {
     Task<T?> GetAccountAsync(string key);
+
+    Task<ICollection<T>> GetAccountsAsync(string[] keys);
+
     Task<ICollection<T>> QueryAccountsByKeyAsync(string[] keyName, object[] keyValue, int? limit = null);
 }
 

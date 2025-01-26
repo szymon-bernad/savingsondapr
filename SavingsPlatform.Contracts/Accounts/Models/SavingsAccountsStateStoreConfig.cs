@@ -1,10 +1,9 @@
-﻿namespace SavingsPlatform.Accounts.Config
+﻿using SavingsPlatform.Contracts.Accounts.Models;
+
+namespace SavingsPlatform.Accounts.Config
 {
-    public class SavingsAccountsStateStoreConfig
+    public class SavingsAccountsStateStoreConfig : PubSubConfig
     {
         public string StateStoreName { get; set; } = "statestore";
-        public string PubSubName { get; set; } = "pubsub";
-        public string TopicName { get; set; } = "savingsaccountsevents";
-        public string CommandsTopicName { get; set; } = "commands";
     }
 }

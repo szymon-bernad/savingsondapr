@@ -5,7 +5,7 @@ using SavingsPlatform.Contracts.Accounts.Requests;
 namespace CurrencyExchange.Api.Internal.Activities;
 
 public class DebitAccountActivity(IAccountsApiClient accountsApiClient)
-    : AccountActivityBase<DebitAccount>
+    : ActivityBase<DebitAccount>
 {
     private readonly IAccountsApiClient _accountsApiClient = accountsApiClient;
 

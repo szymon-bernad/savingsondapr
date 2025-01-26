@@ -2,12 +2,12 @@
 
 namespace CurrencyExchange.Api.Internal.Activities
 {
-    public abstract class AccountActivityBase<TCommand> : WorkflowActivity<TCommand, AccountActivityResult>
+    public abstract class ActivityBase<TCommand> : WorkflowActivity<TCommand, AccountActivityResult>
     {
         protected int _activityRetriesCount = 3;
         protected int _retryDelayMs = 100;
 
-        protected AccountActivityBase(
+        protected ActivityBase(
             int activityRetriesCount = 3,
             int retryDelayMs = 100)
         {

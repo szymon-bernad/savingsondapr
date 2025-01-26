@@ -1,6 +1,7 @@
 ﻿using Carter;
 using SavingsPlatform.Accounts.AccountHolders;
 using SavingsPlatform.Common.Interfaces;
+using SavingsPlatform.Contracts.Accounts.Models;
 using SavingsPlatform.Contracts.Accounts.Requests;
 
 namespace SavingsOnDapr.Api.ApiModules;
@@ -12,7 +13,7 @@ public class AccountHolderModule : ICarterModule
         app.MapGet("/api/account-holders/{refid}", async (string refid, IStateEntryQueryHandler<AccountHolderState> repo) =>
         {
         var result = await repo.GetAccountAsync(refid);
-            return Results.Ok(result);
+            return Results.Ok(new AccountHolderResponse(result.Key, result.Username, result.AccountIds));
         }).WithTags(["account-holders"]);
 
 

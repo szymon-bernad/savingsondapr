@@ -32,6 +32,8 @@ public class AccountsApiClient(IOptions<AccountsApiConfig> config,
                 _config.AccountsApiServiceName,
                 _config.AccountsByIdsEndpoint,
                 accHolderDetails.AccountIds);
+
+            return accounts;
         }
         return Enumerable.Empty<CurrentAccountResponse>().ToList();
     }

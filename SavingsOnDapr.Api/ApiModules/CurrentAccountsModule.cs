@@ -7,6 +7,7 @@ using SavingsPlatform.Common.Interfaces;
 using SavingsPlatform.Common.Services;
 using SavingsPlatform.Contracts.Accounts.Commands;
 using SavingsPlatform.Contracts.Accounts.Enums;
+using SavingsPlatform.Contracts.Accounts.Models;
 using SavingsPlatform.Contracts.Accounts.Requests;
 
 namespace SavingsOnDapr.Api.ApiModules;
@@ -18,7 +19,14 @@ public class CurrentAccountsModule : ICarterModule
         app.MapGet("/api/accounts/{refid}", async (string refid, IStateEntryQueryHandler<CurrentAccountState> repo) =>
         {
             var result = await repo.QueryAccountsByKeyAsync(["externalRef"], [refid]);
-            return Results.Ok(result);
+            if (!result.Any())
+            {
+                return Results.NotFound();
+            }
+
+            var res = result.First();
+            return Results.Ok(
+                new CurrentAccountResponse(res.Key, res.ExternalRef, res.OpenedOn, res.TotalBalance, res.Currency, AccountType.CurrentAccount));
         }).WithTags(["accounts"]);
 
         app.MapPost("/api/accounts",
@@ -36,6 +44,14 @@ public class CurrentAccountsModule : ICarterModule
                 await publishingService.PublishCommand(new CreateCurrentAccountCommand(Guid.NewGuid().ToString(), request.ExternalRef, request.AccountCurrency));
 
                 return Results.Accepted($"/api/accounts/{request.ExternalRef}");
+            }).WithTags(["accounts"]);
+
+        app.MapPost("/api/accounts/:query-by-ids",
+            async (IStateEntryQueryHandler<CurrentAccountState> repo,
+                    string[] accountIds) =>
+            {
+                var result = await repo.GetAccountsAsync(accountIds);
+                return Results.Ok(result.Select(x => new CurrentAccountResponse(x.Key, x.ExternalRef, x.OpenedOn, x.TotalBalance, x.Currency, AccountType.CurrentAccount)));
             }).WithTags(["accounts"]);
 
         app.MapPost("/api/accounts/:credit",

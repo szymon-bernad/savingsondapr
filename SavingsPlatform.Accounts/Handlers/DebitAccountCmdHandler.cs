@@ -41,7 +41,7 @@ public class DebitAccountCmdHandler : IRequestHandler<DebitAccountCommand>
         }
 
         var cfg = await _daprClient.GetConfiguration(
-            "appcfg",
+            "azsub1-cfg",
             ["support-debit-flag"],
             cancellationToken: cancellationToken);
         

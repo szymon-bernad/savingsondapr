@@ -64,15 +64,24 @@ namespace SavingsPlatform.Common.Repositories.Marten
 
         public async Task<TEntry?> GetAccountAsync(string key)
         {
-            var result = (await this.QueryAccountsByKeyAsync(
-                                        new string[] { "id" }, new string[] { key }))
-                                    .SingleOrDefault();
+            var result = await _documentSession.LoadAsync<AggregateState<TData>>(key);
             if (result is not null)
             {
-                return result;
+                return _mapper.Map(result);
             }
 
             return default;
+        }
+
+        public async Task<ICollection<TEntry>> GetAccountsAsync(string[] keys)
+        {
+            var result = await _documentSession.LoadManyAsync<AggregateState<TData>>(keys);
+            if (result is not null && result.Any())
+            {
+                return result.Select(r => _mapper.Map(r)).ToList();
+            }
+
+            return Enumerable.Empty<TEntry>().ToList();
         }
 
         protected async Task PostToStateStoreAsync(AggregateState<TData> entry, MessageProcessedEntry? msgEntry)

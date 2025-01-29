@@ -1,18 +1,26 @@
 using Carter;
 using Dashboard.Api.ApiClients;
+using Microsoft.Identity.Web;
 using SavingsPlatform.Common.Config;
 using SavingsPlatform.Common.Services;
-using SavingsPlatform.Contracts.Accounts.Models;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers().AddJsonOptions(options =>
+builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration);
+
+builder.Services.AddAuthorization(options =>
 {
-    options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    options.AddPolicy("ValidateAccessTokenPolicy", validateAccessTokenPolicy =>
+    {
+        // Validate ClientId from token
+        // only accept tokens issued ....
+        validateAccessTokenPolicy.RequireClaim("aud", "api://6d0aad49-2334-4353-9481-216f6c931969");
+    });
 });
+
+builder.Services.AddCors();
 
 var jsonOptions = new JsonSerializerOptions
 {
@@ -36,10 +44,18 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddCarter();
 var app = builder.Build();
 
+app.UseCors(policy =>
+{
+    policy.AllowAnyOrigin();
+    policy.AllowAnyHeader();
+    policy.AllowAnyMethod();
+});
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.UseSwagger();
 app.UseSwaggerUI();
 app.MapCarter();
 app.MapSubscribeHandler();
 app.UseHttpsRedirection();
-app.UseCloudEvents();
 app.Run();

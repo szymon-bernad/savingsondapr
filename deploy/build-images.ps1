@@ -22,12 +22,12 @@ Write-Host  ('verNo: {0}' -f $verNo)
 if ($DoTheBuild)
 {
 	Push-Location -Path ..\SavingsOnDapr.Api
-	
-	$verNo = BuildContainerApp 'savingsondapr.api' $ContainerRegName $verNo
+	$verRef = ([ref]$verNo)
+	BuildContainerApp 'savingsondapr.api' $ContainerRegName -verNo $verRef
 	
 	Pop-Location
 }
-$Env:API_IMGVER = ('0.{0}' -f $verNo)
+$Env:API_IMGVER = ('0.{0}' -f $verRef.value)
 
 ### savingsondapr.eventstore
 $apiVerCmd = 'docker images savingsondapr.eventstore --format "{{.Tag}}"'
@@ -41,12 +41,12 @@ if ($verNo -eq '')
 if ($DoTheBuild)
 {
 	Push-Location -Path ..\SavingsOnDapr.EventStore
-
-	$verNo = BuildContainerApp 'savingsondapr.eventstore' $ContainerRegName $verNo
+	$verRef = ([ref]$verNo)
+	BuildContainerApp 'savingsondapr.eventstore' $ContainerRegName -verNo $verRef
 
 	Pop-Location
 }
-$Env:EVT_IMGVER = ('0.{0}' -f $verNo)
+$Env:EVT_IMGVER = ('0.{0}' -f $verRef.value)
 
 ### currencyexchange.api
 $apiVerCmd = 'docker images savingsondapr.currencyexchange --format "{{.Tag}}"'
@@ -60,12 +60,31 @@ if ($verNo -eq '')
 if ($DoTheBuild)
 {
 	Push-Location -Path ..\CurrencyExchange.Api
-
-	$verNo = BuildContainerApp 'savingsondapr.currencyexchange' $ContainerRegName $verNo
+	$verRef = ([ref]$verNo)
+	BuildContainerApp 'savingsondapr.currencyexchange' $ContainerRegName -verNo $verRef
 
 	Pop-Location
 }
-$Env:EXCH_IMGVER = ('0.{0}' -f $verNo)
+$Env:EXCH_IMGVER = ('0.{0}' -f $verRef.value)
+
+### dashboard.api
+$apiVerCmd = 'docker images savingsondapr.dashboard --format "{{.Tag}}"'
+$verNo = 0
+$verNo = GetContainerVer $apiVerCmd
+if ($verNo -eq '')
+{
+	$verNo = 0
+}
+
+if ($DoTheBuild)
+{
+	Push-Location -Path ..\Dashboard.Api
+	$verRef = ([ref]$verNo)
+	BuildContainerApp 'savingsondapr.dashboard' $ContainerRegName -verNo $verRef
+
+	Pop-Location
+}
+$Env:DASH_IMGVER = ('0.{0}' -f $verRef.value)
 
 if ($DeployToAzEnv)
 {

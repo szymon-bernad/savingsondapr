@@ -29,8 +29,10 @@ var jsonOptions = new JsonSerializerOptions
 jsonOptions.Converters.Add(new JsonStringEnumConverter());
 
 builder.Services.Configure<AccountsApiConfig>(builder.Configuration.GetSection("AccountsApiConfig"));
+builder.Services.Configure<ExchangeApiConfig>(builder.Configuration.GetSection("ExchangeApiConfig"));
 
 builder.Services.AddScoped<IAccountsApiClient, AccountsApiClient>()
+                .AddScoped<IExchangeApiClient, ExchangeApiClient>()
                 .AddScoped<IEventPublishingService, DaprEventPublishingService>();
 var svcConfig = builder.Configuration.GetSection("ServiceConfig").Get<ServiceConfig>();
 
@@ -53,9 +55,9 @@ app.UseCors(policy =>
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseCloudEvents();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.MapCarter();
 app.MapSubscribeHandler();
-app.UseHttpsRedirection();
 app.Run();

@@ -74,6 +74,12 @@ app.MapCarter();
 app.MapGet("/", () => Results.LocalRedirect("~/swagger"));
 app.MapSubscribeHandler();
 app.UseRouting();
+app.UseCors(policy =>
+{
+    policy.AllowAnyOrigin();
+    policy.AllowAnyHeader();
+    policy.AllowAnyMethod();
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

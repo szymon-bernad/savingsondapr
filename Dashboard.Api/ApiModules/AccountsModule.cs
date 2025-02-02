@@ -15,7 +15,7 @@ public class AccountsModule : ICarterModule
             IAccountsApiClient apiClient,
             ClaimsPrincipal user) =>
         {
-            if (user.Identity.IsAuthenticated)
+            if (user.Identity?.IsAuthenticated ?? false)
             {
                 var oidClaim = user.Claims?.FirstOrDefault(c => c.Type == "http://schemas.microsoft.com/identity/claims/objectidentifier");
                 if (oidClaim?.Value == userid)
@@ -29,5 +29,7 @@ public class AccountsModule : ICarterModule
         })
         .RequireAuthorization(["ValidateAccessTokenPolicy"])
         .WithTags(["users-accounts"]);
+
+        app.MapGet("/healthz", () => Results.Ok()).WithTags(["platform"]);
     }
 }

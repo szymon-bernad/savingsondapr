@@ -3,6 +3,7 @@ param location string
 param environmentName string
 param containerImage string
 param targetPort int
+param daprPort int
 param isExternalIngress bool
 param enableIngress bool 
 param minReplicas int = 0
@@ -53,7 +54,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-11-02-preview' = {
       } : null
       dapr: {
         enabled: true
-        appPort: targetPort
+        appPort: daprPort
         appId: containerAppName
         appProtocol: 'http'
         
@@ -70,7 +71,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-11-02-preview' = {
             {
               type: 'Readiness'
                httpGet: {
-                 port: 8080
+                 port: daprPort
                  path: '/healthz'
                  scheme: 'HTTP'
                }

@@ -32,6 +32,19 @@ public class ExchangeModule : ICarterModule
                 return Results.Forbid();
             })
         .RequireAuthorization(["ValidateAccessTokenPolicy"])
-        .WithTags(["users-accounts"]);
+        .WithTags(["exchange"]);
+
+        app.MapPost("/api/currency/exchange-query",
+            async (
+                IExchangeApiClient exchangeApiClient,
+                CurrencyExchangeQuery query) =>
+            {
+                var result = await exchangeApiClient.GetExchangeRateAsync(query);
+                return Results.Ok(result);
+            })
+        .RequireAuthorization(["ValidateAccessTokenPolicy"])
+        .WithTags(["exchange"]);
     }
+
+
 }

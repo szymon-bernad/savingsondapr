@@ -27,7 +27,7 @@ public class AccountsModule : ICarterModule
 
             return Results.Forbid();
         })
-        .RequireAuthorization(["ValidateAccessTokenPolicy"])
+        .RequireAuthorization()
         .WithTags(["users-accounts"]);
 
         app.MapGet("/healthz", () => Results.Ok()).WithTags(["platform"]);

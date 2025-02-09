@@ -31,7 +31,7 @@ public class ExchangeModule : ICarterModule
                 }
                 return Results.Forbid();
             })
-        .RequireAuthorization(["ValidateAccessTokenPolicy"])
+        .RequireAuthorization()
         .WithTags(["exchange"]);
 
         app.MapPost("/api/currency/exchange-query",
@@ -42,7 +42,7 @@ public class ExchangeModule : ICarterModule
                 var result = await exchangeApiClient.GetExchangeRateAsync(query);
                 return Results.Ok(result);
             })
-        .RequireAuthorization(["ValidateAccessTokenPolicy"])
+        .RequireAuthorization()
         .WithTags(["exchange"]);
     }
 

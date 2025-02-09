@@ -11,10 +11,17 @@ public class AccountHolderModule : ICarterModule
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         app.MapGet("/api/account-holders/{refid}", async (string refid, IStateEntryQueryHandler<AccountHolderState> repo) =>
-        {
-        var result = await repo.GetAccountAsync(refid);
-            return Results.Ok(new AccountHolderResponse(result.Key, result.Username, result.AccountIds));
-        }).WithTags(["account-holders"]);
+            {
+                var result = await repo.GetAccountAsync(refid);
+                if (result is not null)
+                {
+                    return Results.Ok(
+                        new AccountHolderResponse(result.Key, result?.Username ?? string.Empty, result?.AccountIds ?? []));
+                }    
+
+                return Results.NotFound();
+            })
+            .WithTags(["account-holders"]);
 
 
         app.MapPost("/api/account-holders",
@@ -33,6 +40,7 @@ public class AccountHolderModule : ICarterModule
 
                 return Results.Created($"/api/account-holders/{request.Id}", null);
 
-            }).WithTags(["account-holders"]);
+            })
+            .WithTags(["account-holders"]);
     }
 }

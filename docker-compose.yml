@@ -83,6 +83,17 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  dashboard.api:
+    build:
+      context: .
+      dockerfile: ./Dashboard.Api/Dockerfile
+
+  dashboard.api-dapr:
+    image: "daprio/daprd:1.14.2"
+    network_mode: "service:dashboard.api"
+    depends_on:
+      savingsondapr.api:
+        condition: service_started
 volumes:
   pgdata:
     external: true

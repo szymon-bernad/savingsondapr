@@ -3,9 +3,11 @@ param location string = resourceGroup().location
 
 param containerRegistryName string = 'mainazsub1'
 param keyVaultName string = 'main-kv-101'
+
 param apiImgVer string = ''
 param eventImgVer string = ''
 param exchImgVer string = ''
+param dashImgVer string = ''
 
 param backendApiPort int = 8080
 param coreResourceGroupName string = 'main-resg'
@@ -13,10 +15,12 @@ param coreResourceGroupName string = 'main-resg'
 param spApiImage string = 'savingsondapr.api'
 param eventStoreImage string = 'savingsondapr.eventstore'
 param exchApiImage string = 'savingsondapr.currencyexchange'
+param dashApiImage string = 'savingsondapr.dashboard'
 
 param apiAppName string = 'sod-api'
 param eventStoreAppName string = 'sod-eventstore'
 param exchAppName string = 'sod-exchange'
+param dashAppName string = 'sod-dashboard'
 
 param identityName string = 'savingsondapr-idntty'
 
@@ -59,12 +63,13 @@ module spApiApp 'container-app.bicep' = {
   dependsOn: []
   params: {
     enableIngress: true
-    isExternalIngress: true
+    isExternalIngress: false
     location: location
     environmentName: environment.outputs.acaEnvironmentName
     containerAppName: apiAppName
     containerImage: '${containerRegistry.properties.loginServer}/${spApiImage}:${apiImgVer}'
     targetPort: backendApiPort
+    daprPort: backendApiPort
     minReplicas: 1
     maxReplicas: 1
     containerRegistryServer: containerRegistry.properties.loginServer
@@ -112,6 +117,10 @@ module spApiApp 'container-app.bicep' = {
         name: 'ServiceConfig__Version'
         value: 'v-${apiImgVer}'
       }
+      {
+        name: 'ServiceConfig__UseAzureMonitor'
+        value: 'true'
+      }
     ]
   }
 }
@@ -122,12 +131,13 @@ module eventStoreApiApp 'container-app.bicep' = {
   dependsOn: []
   params: {
     enableIngress: true
-    isExternalIngress: true
+    isExternalIngress: false
     location: location
     environmentName: environment.outputs.acaEnvironmentName
     containerAppName: eventStoreAppName
     containerImage: '${containerRegistry.properties.loginServer}/${eventStoreImage}:${eventImgVer}'
     targetPort: backendApiPort
+    daprPort: backendApiPort
     minReplicas: 1
     maxReplicas: 1
     containerRegistryServer: containerRegistry.properties.loginServer
@@ -170,18 +180,19 @@ module eventStoreApiApp 'container-app.bicep' = {
   }
 }
 
-// SavingAccounts API App
+// Exch API App
 module exchApiApp 'container-app.bicep' = {
   name: '${appname}--exch'
   dependsOn: []
   params: {
     enableIngress: true
-    isExternalIngress: true
+    isExternalIngress: false
     location: location
     environmentName: environment.outputs.acaEnvironmentName
     containerAppName: exchAppName
     containerImage: '${containerRegistry.properties.loginServer}/${exchApiImage}:${exchImgVer}'
     targetPort: backendApiPort
+    daprPort: backendApiPort
     minReplicas: 1
     maxReplicas: 1
     containerRegistryServer: containerRegistry.properties.loginServer
@@ -215,10 +226,71 @@ module exchApiApp 'container-app.bicep' = {
         name: 'AccountsApiConfig__AccountsApiServiceName'
         value: apiAppName
       }
+      {
+        name: 'ServiceConfig__UseAzureMonitor'
+        value: 'true'
+      }    
     ]
   }
 }
 
+
+module dashboardApiApp 'container-app.bicep' = {
+  name: '${appname}-dash'
+  dependsOn: []
+  params: {
+    enableIngress: true
+    isExternalIngress: true
+    location: location
+    environmentName: environment.outputs.acaEnvironmentName
+    containerAppName: dashAppName
+    containerImage: '${containerRegistry.properties.loginServer}/${dashApiImage}:${dashImgVer}'
+    targetPort: backendApiPort
+    daprPort: backendApiPort
+    minReplicas: 1
+    maxReplicas: 1
+    containerRegistryServer: containerRegistry.properties.loginServer
+    identityName: identityName
+    revisionMode: 'Single'
+    secretsRefList: [
+      {
+        name: 'appinsconnstr'
+        keyVaultUrl: 'https://${keyVaultName}.vault.azure.net/secrets/appinsconnstr'
+        identity: identity.id
+      }
+    ]
+    envVarsList: [ 
+      {
+        name: 'DAPR_HTTP_PORT'
+        value: '3500'
+      }
+      {
+        name: 'NAMESPACE'
+        value: 'savings'
+      }
+      {
+        name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+        secretRef: 'appinsconnstr'
+      }
+      {
+        name: 'ASPNETCORE_HTTP_PORTS'
+        value: '8080'
+      }
+      {
+        name: 'ASPNETCORE_URLS'
+        value: 'http://*:8080/'
+      }
+      {
+        name: 'AccountsApiConfig__AccountsApiServiceName'
+        value: apiAppName
+      }
+	  {
+        name: 'ExchangeApiConfig__ApiServiceName'
+        value: exchAppName
+      }
+    ]
+  }
+}
 ////Statestore Component
 resource statestoreDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
   name: '${environmentName}/statestore-postgres'

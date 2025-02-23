@@ -21,6 +21,11 @@ services:
     - "5672:5672"       # AMQP protocol port
     - "15672:15672"  # management plugin port"
   
+  redis:
+    image: redis:6.2.6-alpine
+    ports:
+      - "6379:6379"
+
   postgres:
     image: postgres:14-alpine
     ports:

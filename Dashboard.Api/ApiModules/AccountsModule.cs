@@ -1,6 +1,9 @@
 ﻿using Carter;
 using Dashboard.Api.ApiClients;
+using Microsoft.Extensions.Caching.Distributed;
+using SavingsPlatform.Contracts.Accounts.Models;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace Dashboard.Api.ApiModules;
 
@@ -13,14 +16,40 @@ public class AccountsModule : ICarterModule
             async (
                 string userid,
                 IAccountsApiClient apiClient,
-                ClaimsPrincipal user) => 
+                ClaimsPrincipal user,
+                IDistributedCache cache) => 
         {
             if (user.Identity?.IsAuthenticated ?? false)
             {
                 var oidClaim = user.Claims?.FirstOrDefault(c => c.Type == OidClaimType);
                 if (oidClaim?.Value == userid)
                 {
-                    var accounts = await apiClient.GetAllUserAccountsAsync(userid);
+                    ICollection<CurrentAccountResponse>? accounts = default; 
+                    var cachedValue = await cache.GetStringAsync($"accounts-{userid}");
+                    if (!string.IsNullOrWhiteSpace(cachedValue))
+                    {
+                        try
+                        {
+                            accounts = JsonSerializer.Deserialize<ICollection<CurrentAccountResponse>>(cachedValue);
+                        }
+                        catch (Exception ex)
+                        {
+                            cachedValue = null;
+                        }
+                    }
+
+                    accounts ??= await apiClient.GetAllUserAccountsAsync(userid);
+
+                    if ((accounts?.Any() ?? false) && string.IsNullOrWhiteSpace(cachedValue))
+                    {
+                        var cacheKey = $"accounts-{userid}";
+                        var cacheOptions = new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                        };
+                        await cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(accounts), cacheOptions);
+                    }
+
                     return Results.Ok(accounts);
                 }
             }

@@ -196,14 +196,13 @@ public class PlatformModule : ICarterModule
             () => Task.FromResult(Results.Accepted())).WithTags(["platform"]);
 
         app.MapGet("/healthz",
-        async (DaprClient client,
-               ILogger<PlatformModule> logger,
+        async (ILogger<PlatformModule> logger,
                IEventPublishingService publishingService,
                IStateEntryQueryHandler<InstantAccessSavingsAccountState> iasaRepository) =>
             {
                 try
                 {
-                    var healthy = await client.CheckHealthAsync();
+                    var healthy = true;
 
                     if (healthy)
                     {

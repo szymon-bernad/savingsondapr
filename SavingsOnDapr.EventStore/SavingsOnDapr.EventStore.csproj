@@ -11,9 +11,9 @@
   <ItemGroup>
     <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.2.0" />
     <PackageReference Include="Carter" Version="8.2.1" />
-    <PackageReference Include="Dapr.AspNetCore" Version="1.14.0" />
-    <PackageReference Include="Marten" Version="7.29.0" />
-    <PackageReference Include="Marten.AspNetCore" Version="7.29.0" />
+    <PackageReference Include="Dapr.AspNetCore" Version="1.15.0" />
+    <PackageReference Include="Marten" Version="7.38.0" />
+    <PackageReference Include="Marten.AspNetCore" Version="7.38.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.6" />
     <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.10.0" />
     <PackageReference Include="OpenTelemetry.Exporter.Zipkin" Version="1.9.0" />

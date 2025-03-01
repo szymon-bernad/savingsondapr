@@ -39,6 +39,7 @@ module spApiApp 'container-app.bicep' = {
     revisionName: revisionName
     containerImage: '${containerRegistry.properties.loginServer}/${imageName}:${imgVer}'
     targetPort: backendApiPort
+    daprPort: backendApiPort
     minReplicas: 1
     maxReplicas: 1
     containerRegistryServer: containerRegistry.properties.loginServer

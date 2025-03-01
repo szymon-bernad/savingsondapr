@@ -28,6 +28,7 @@ services:
       "--enable-app-health-check",
       "--app-health-check-path", "/healthz",
       "--placement-host-address", "placement:50000",
+      "--scheduler-host-address", "scheduler:50007",
       "--resources-path", "/components",
       "-config", "/configuration/config.yaml"
       ]
@@ -55,6 +56,7 @@ services:
       "--enable-app-health-check",
       "--app-health-check-path", "/healthz",
       "--placement-host-address", "placement:50000",
+      "--scheduler-host-address", "scheduler:50007",
       "--resources-path", "/components",
       "-config", "/configuration/config.yaml"
       ]
@@ -86,9 +88,39 @@ services:
       "--enable-app-health-check",
       "--app-health-check-path", "/healthz",
       "--placement-host-address", "placement:50000",
+      "--scheduler-host-address", "scheduler:50007",
       "--resources-path", "/components",
       "-config", "/configuration/config.yaml"
       ]
     volumes:
       - "./dapr/components/:/components"
       - "./dapr/configuration:/configuration"
+
+  dashboard.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - DAPR_HTTP_PORT=3609
+      - NAMESPACE=savings
+      - AccountsApiConfig__AccountsApiServiceName=dapr-savings-api
+      - ExchangeApiConfig__ApiServiceName=dapr-exchange-api
+      - OTEL_EXPORTER_ZIPKIN_ENDPOINT=http://zipkin:9411/api/v2/spans
+    ports:
+      - "5170:8080"
+
+  dashboard.api-dapr:
+      command: ["./daprd",
+          "--app-id", "dapr-dashboard-api",
+          "--app-port", "8080",
+          "--dapr-http-port", "3609",
+          "--app-protocol", "http",
+          "--enable-app-health-check",
+          "--app-health-check-path", "/healthz",
+          "--placement-host-address", "placement:50000",
+          "--scheduler-host-address", "scheduler:50007",
+          "--resources-path", "/components",
+          "-config", "/configuration/config.yaml"
+          ]
+      volumes:
+        - "./dapr/components/:/components"
+        - "./dapr/configuration:/configuration"  

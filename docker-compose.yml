@@ -7,7 +7,22 @@ services:
       - "9411:9411"  # allows us to access the web console
   
   placement:
-    image: "daprio/dapr:1.14.2"
+    image: "daprio/dapr:1.15.1"
+    command: ["./placement", "--port", "50000"]
+    ports:
+      - "50000:50000"
+
+  scheduler:
+    image: "daprio/dapr:1.15.1"
+    command: ["./scheduler", "--port", "50007"]
+    ports:
+      - "50007:50007"
+    # WARNING - This is a tmpfs volume, your state will not be persisted across restarts
+    volumes:
+    - type: tmpfs
+      target: /data
+      tmpfs:
+        size: "64m"
 
   rabbitmq:
     image: rabbitmq:3.13.7-management-alpine
@@ -42,7 +57,7 @@ services:
       - postgres
 
   savingsondapr.api-dapr:
-    image: "daprio/daprd:1.14.2"
+    image: "daprio/daprd:1.15.1"
     network_mode: "service:savingsondapr.api"
     depends_on:
       postgres:
@@ -60,7 +75,7 @@ services:
       - postgres
   
   currencyexchange.api-dapr:
-    image: "daprio/daprd:1.14.2"
+    image: "daprio/daprd:1.15.1"
     network_mode: "service:currencyexchange.api"
     depends_on:
       postgres:
@@ -78,7 +93,7 @@ services:
       - postgres
 
   savingsondapr.eventstore-dapr:
-    image: "daprio/daprd:1.14.2"
+    image: "daprio/daprd:1.15.1"
     network_mode: "service:savingsondapr.eventstore"
     depends_on:
       postgres:
@@ -94,7 +109,7 @@ services:
       dockerfile: ./Dashboard.Api/Dockerfile
 
   dashboard.api-dapr:
-    image: "daprio/daprd:1.14.2"
+    image: "daprio/daprd:1.15.1"
     network_mode: "service:dashboard.api"
     depends_on:
       savingsondapr.api:

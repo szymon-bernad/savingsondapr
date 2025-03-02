@@ -4,3 +4,8 @@ GET {{CurrencyExchange.Api_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+GET https://sod-api.yellowstone-da8942a7.polandcentral.azurecontainerapps.io/healthver
+
+
+###
+GET  https://savingsondapr-api--v-0-22.purplewater-026e1871.polandcentral.azurecontainerapps.io/healthver

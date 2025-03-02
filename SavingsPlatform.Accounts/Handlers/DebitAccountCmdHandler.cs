@@ -40,46 +40,34 @@ public class DebitAccountCmdHandler : IRequestHandler<DebitAccountCommand>
             throw new TaskCanceledException();
         }
 
-        var cfg = await _daprClient.GetConfiguration(
-            "appcfg",
-            ["support-debit-flag"],
-            cancellationToken: cancellationToken);
-        
-        if (cfg.Items.TryGetValue("support-debit-flag", out var supportDebitFlag) && !Boolean.Parse(supportDebitFlag.Value))
+        await _threadSynchronizer.ExecuteSynchronizedAsync(request.ExternalRef, () =>
         {
-            throw new InvalidOperationException("That is not supported.");
-        }
-        else
-        {
-            await _threadSynchronizer.ExecuteSynchronizedAsync(request.ExternalRef, () =>
-            {
-                _logger.LogInformation("Sync'ed processing of {CmdName} cmd for {ExternalRef} with CmdId = {MsgId}.",
-                                       nameof(DebitAccountCommand),
-                                       request.ExternalRef,
-                                      request.MsgId);
+            _logger.LogInformation("Sync'ed processing of {CmdName} cmd for {ExternalRef} with CmdId = {MsgId}.",
+                                    nameof(DebitAccountCommand),
+                                    request.ExternalRef,
+                                    request.MsgId);
 
-                return request.Type switch
+            return request.Type switch
+            {
+                AccountType.CurrentAccount => Task.Run(async () =>
                 {
-                    AccountType.CurrentAccount => Task.Run(async () =>
-                    {
-                        _logger.LogInformation("Sync'ed processing of {CmdName} cmd for {ExternalRef} with CmdId = {MsgId}.",
-                                               nameof(DebitAccountCommand),
-                                               request.ExternalRef,
-                                               request.MsgId);
-                        var instance = await _currentAccountFactory.GetInstanceByExternalRefAsync(request.ExternalRef);
-                        await instance.DebitAsync(request);
-                    }),
-                    AccountType.SavingsAccount => Task.Run(async () =>
-                    {
-                        _logger.LogInformation("Sync'ed processing of {CmdName} cmd for {ExternalRef} with CmdId = {MsgId}.",
-                                               nameof(DebitAccountCommand),
-                                               request.ExternalRef,
-                                               request.MsgId);
-                        var instance = await _savingsAccountFactory.GetInstanceByExternalRefAsync(request.ExternalRef);
-                        await instance.DebitAsync(request);
-                    })
-                };
-            });
-        }
+                    _logger.LogInformation("Sync'ed processing of {CmdName} cmd for {ExternalRef} with CmdId = {MsgId}.",
+                                            nameof(DebitAccountCommand),
+                                            request.ExternalRef,
+                                            request.MsgId);
+                    var instance = await _currentAccountFactory.GetInstanceByExternalRefAsync(request.ExternalRef);
+                    await instance.DebitAsync(request);
+                }),
+                AccountType.SavingsAccount => Task.Run(async () =>
+                {
+                    _logger.LogInformation("Sync'ed processing of {CmdName} cmd for {ExternalRef} with CmdId = {MsgId}.",
+                                            nameof(DebitAccountCommand),
+                                            request.ExternalRef,
+                                            request.MsgId);
+                    var instance = await _savingsAccountFactory.GetInstanceByExternalRefAsync(request.ExternalRef);
+                    await instance.DebitAsync(request);
+                })
+            };
+        });
     }
 }

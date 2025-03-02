@@ -16,4 +16,4 @@ spec:
       # Overrides default retry behavior for Pub/sub subscriptions 
         policy: exponential
         maxInterval: 3m
-        maxRetries: 8
+        maxRetries: 7

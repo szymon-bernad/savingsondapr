@@ -34,7 +34,6 @@ public class CurrentAccountsModule : ICarterModule
                    IStateEntryQueryHandler<CurrentAccountState> caRepo,
                    CreateCurrentAccount request) =>
             {
-
                 var caResult = await caRepo.QueryAccountsByKeyAsync(["externalRef"], [request.ExternalRef]);
                 if (caResult.Any())
                 {

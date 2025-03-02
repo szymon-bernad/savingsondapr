@@ -1,6 +1,86 @@
-@SavingsOnDapr_HostAddress = http://localhost:5269
+@SavingsOnDapr_HostAddress = http://localhost:5136
+@SavingsOnDapr_ExchHost = http://localhost:5156
+@host=http://localhost:5156
 
-GET {{SavingsOnDapr_HostAddress}}/weatherforecast/
+
+###
+# @name exchquery
+
+POST /v1/currency-exchange-query
+Content-Type: application/json
+Accept: application/json
+
+{
+    "source" : "USD",
+    "target" : "EUR",
+    "amount" : 200
+}
+
+?? status == 200
+?? body contains rate
+?? js response.parsedBody.exchangeType == USD => EUR
+
+###
+# @prompt refid
+# @name wtf
+GET {{SavingsOnDapr_HostAddress}}/api/accounts/{{refid}}
 Accept: application/json
 
 ###
+
+GET {{SavingsOnDapr_HostAddress}}/api/accounts/{{wtf.response.body.$[0].externalRef}}
+
+
+###
+# @prompt refidc
+# @name credit
+POST {{SavingsOnDapr_HostAddress}}/api/accounts/:credit
+Content-Type: application/json
+Accept: application/json
+
+{
+    "externalRef" : "{{refidc}}",
+    "amount" : 101.00,
+    "transactionDate" : "{{$datetime iso8601}}"
+}
+
+###
+# @prompt refidd
+# @name debit
+POST {{SavingsOnDapr_HostAddress}}/api/accounts/:debit
+Content-Type: application/json
+Accept: application/json
+
+{
+    "externalRef" : "{{refidd}}",
+    "amount" : 1001.00,
+    "transactionDate" : "{{$datetime iso8601}}"
+}
+
+###
+
+GET {{SavingsOnDapr_HostAddress}}{{credit.response.headers.location}}
+
+
+
+###
+@requestedRate = {{exchquery.response.body.$.rate + 0.1}}
+
+# @name exchorder
+POST {{SavingsOnDapr_ExchHost}}/v1/currency-exchange-order
+Content-Type: application/json
+Accept: application/json
+
+{
+  "orderId": "limitorder-{{$randomInt 1000 9999}}",
+  "debtorExternalRef": "qwerty-usd-1001",
+  "beneficiaryExternalRef": "test-acc-10005",
+  "sourceCurrency": "USD",
+  "targetCurrency": "EUR",
+  "sourceAmount": 6005,
+  "exchangeRate": 1.00,
+  "orderType": "LimitOrder"
+}
+
+###
+GET {{SavingsOnDapr_ExchHost}}/{{exchorder.response.headers.location}}

@@ -1,5 +1,4 @@
 ﻿using Carter;
-using Microsoft.AspNetCore.Mvc;
 using SavingsOnDapr.EventStore.Store;
 using SavingsPlatform.Contracts.Accounts.Enums;
 

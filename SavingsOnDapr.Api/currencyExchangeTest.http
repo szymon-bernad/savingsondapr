@@ -1,5 +1,5 @@
-@hostSavings=REDACTED
-@hostExchange=REDACTED
+@hostSavings=https://savingsondapr-api.braveforest-4a5ed4e9.polandcentral.azurecontainerapps.io
+@hostExchange=https://savingsondapr-exchange.braveforest-4a5ed4e9.polandcentral.azurecontainerapps.io
 
 ###
 # @name createUsdAccount

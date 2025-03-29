@@ -10,6 +10,8 @@ using SavingsPlatform.Common.Config;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Weasel.Core;
+using SavingsOnDapr.EventStore.Handlers;
+using SavingsPlatform.Common.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +34,8 @@ builder.Services.AddMarten(
 
 builder.Services.AddScoped<AccountHierarchyEventStore>();
 builder.Services.AddScoped<CurrencyExchangeEventStore>();
+builder.Services.AddScoped<ICurrencyExchangeSummaryRequestHandler, CurrencyExchangeSummaryRequestHandler>();
+builder.Services.AddScoped<IEventPublishingService, DaprEventPublishingService>();
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -53,6 +57,10 @@ builder.Logging.AddOpenTelemetry(x =>
 {
     x.IncludeScopes = true;
     x.IncludeFormattedMessage = true;
+});
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetSection("Redis")["ConnectionString"];
 });
 
 (svcConfig?.UseAzureMonitor ?? false ?

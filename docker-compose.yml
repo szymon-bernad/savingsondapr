@@ -37,9 +37,10 @@ services:
     - "15672:15672"  # management plugin port"
   
   redis:
-    image: redis:6.2.6-alpine
+    image: redis
+    command: redis-server --port 6379 --requirepass "examplexamplexample" --maxmemory 4mb --maxmemory-policy allkeys-lru
     ports:
-      - "6379:6379"
+    - "6379:6379"
 
   postgres:
     image: postgres:14-alpine

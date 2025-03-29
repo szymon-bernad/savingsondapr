@@ -12,5 +12,11 @@ public record CurrencyExchangeSummaryResponse
 
     public string[] ColumnNames { get; init; } = [];
 
-    public IDictionary<string, string[]>? ColumnValues { get; init; }
+    public ICollection<CurrencyExchangeSummaryValueEntry> Entries { get; init; } = [];
+}
+
+public record CurrencyExchangeSummaryValueEntry
+{
+    public string EntryName { get; init; } = string.Empty;
+    public ICollection<string> ColumnValues { get; init; } = [];
 }

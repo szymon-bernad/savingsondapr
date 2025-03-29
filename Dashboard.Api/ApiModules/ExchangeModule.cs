@@ -1,6 +1,10 @@
-﻿using Carter;
+﻿using Azure;
+using Carter;
+using Dapr.Client;
 using Dashboard.Api.ApiClients;
 using JasperFx.Core;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.ObjectPool;
@@ -10,6 +14,8 @@ using SavingsPlatform.Contracts.Accounts.Requests;
 using SavingsPlatform.Contracts.CurrencyExchange.Response;
 using System.Security.Claims;
 using System.Text.Json;
+using static Dapr.Client.Autogen.Grpc.v1.Dapr;
+using DaprClient = Dapr.Client.DaprClient;
 
 namespace Dashboard.Api.ApiModules;
 
@@ -53,6 +59,98 @@ public class ExchangeModule : ICarterModule
         .RequireAuthorization()
         .WithTags(["exchange"]);
 
+        app.MapPost("/api/currency-exchange-summary/{source:alpha}/{target:alpha}/{forDate:datetime}",
+            async (
+                    HttpRequest request,
+                    Currency source,
+                    Currency target,
+                    DateTime forDate,
+                     [FromServices] IEventStoreApiClient apiClient,
+                    [FromServices] DaprClient daprClient,
+                   [FromServices] IDistributedCache cache,
+                    [FromQuery] DateTime? toDate = null) =>
+            {
+                if (forDate.Date > DateTime.UtcNow.Date)
+                {
+                    return Results.BadRequest("Cannot generate summary for future dates.");
+                }
+
+                if (toDate.HasValue && toDate.Value.Date > DateTime.UtcNow.Date)
+                {
+                    return Results.BadRequest("Invalid date range provided.");
+                }
+
+                if (source == target)
+                {
+                    return Results.BadRequest("Source and target currencies cannot be the same.");
+                }
+
+                var summaryKey = toDate.HasValue ?
+                    $"{source}=>{target}_{forDate:yyyy-MM-dd}_{toDate:yyyy-MM-dd}" :
+                    $"{source}=>{target}_{forDate:yyyy-MM-dd}";
+
+                var cachedValue = await cache.GetStringAsync(summaryKey);
+
+                if (!string.IsNullOrWhiteSpace(cachedValue))
+                {
+                    try
+                    {
+                        var cachedResult = JsonSerializer.Deserialize<CurrencyExchangeSummaryResponse>(cachedValue);
+
+                        return Results.Accepted(
+                            request.GetEncodedPathAndQuery());
+                    }
+                    catch (Exception ex)
+                    {
+                        await cache.RemoveAsync(summaryKey);
+                    }
+                }
+
+                var flagValue = false;
+
+                try
+                {
+                    var cfg = await daprClient.GetConfiguration("app-cfg", ["get-rnd-exch"]);
+
+                    if (cfg.Items.TryGetValue("get-rnd-exch", out var genRandomExchangeSummary) &&
+                        bool.TryParse(genRandomExchangeSummary.Value, out var genRandomExchangeSummaryValue))
+                    {
+                        flagValue = genRandomExchangeSummaryValue;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    flagValue = true;
+                }
+
+                if (flagValue)
+                {
+                    var res = GetFakeResponse(summaryKey, source, target, forDate, toDate);
+                    await cache.SetStringAsync(summaryKey, JsonSerializer.Serialize(res), new DistributedCacheEntryOptions
+                    {
+                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(60)
+                    });
+
+                }
+                else
+                {
+                    var startDate = new DateOnly(forDate.Year, forDate.Month, forDate.Day);
+                    var endDate = toDate.HasValue ? new DateOnly(toDate.Value.Year, toDate.Value.Month, toDate.Value.Day) : startDate;
+
+                    await apiClient.InitiateCurrencyExchangeSummaryAsync(new CurrencyExchangeSummaryRequest
+                    {
+                        SourceCurrency = source,
+                        TargetCurrency = target,
+                        StartDate = startDate,
+                        EndDate = endDate
+                    });
+                }
+
+                return Results.Accepted(request.GetEncodedPathAndQuery());
+            })
+            .Produces(StatusCodes.Status202Accepted)
+            .Produces(StatusCodes.Status400BadRequest);
 
         app.MapGet("/api/currency-exchange-summary/{source:alpha}/{target:alpha}/{forDate:datetime}",
             async (IDistributedCache cache,
@@ -61,6 +159,21 @@ public class ExchangeModule : ICarterModule
                     DateTime forDate,
                     [FromQuery] DateTime? toDate = null) =>
             {
+                if (forDate.Date > DateTime.UtcNow.Date)
+                {
+                    return Results.BadRequest("Cannot generate summary for future dates.");
+                }
+
+                if (toDate.HasValue && toDate.Value.Date > DateTime.UtcNow.Date)
+                {
+                    return Results.BadRequest("Invalid date range provided.");
+                }
+
+                if (source == target)
+                {
+                    return Results.BadRequest("Source and target currencies cannot be the same.");
+                }
+
                 var summaryKey = toDate.HasValue ?
                     $"{source}=>{target}_{forDate:yyyy-MM-dd}_{toDate:yyyy-MM-dd}" :
                     $"{source}=>{target}_{forDate:yyyy-MM-dd}";
@@ -68,20 +181,7 @@ public class ExchangeModule : ICarterModule
                 var cachedValue = await cache.GetStringAsync(summaryKey);
                 if (string.IsNullOrWhiteSpace(cachedValue))
                 {
-                    await cache.SetStringAsync(summaryKey, "loading", new DistributedCacheEntryOptions
-                    {
-                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
-                    });
-                    return Results.Accepted();
-                }
-                else if (string.Equals(cachedValue, "loading", StringComparison.OrdinalIgnoreCase))
-                {
-                    var res = GetFakeResponse(summaryKey, source, target, forDate, toDate);
-                    await cache.SetStringAsync(summaryKey, JsonSerializer.Serialize(res), new DistributedCacheEntryOptions
-                    {
-                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(60)
-                    });
-                    return Results.Ok(res);
+                    return Results.NoContent();
                 }
                 else
                 {
@@ -90,14 +190,16 @@ public class ExchangeModule : ICarterModule
                         var cachedResult = JsonSerializer.Deserialize<CurrencyExchangeSummaryResponse>(cachedValue);
                         return Results.Ok(cachedResult);
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
-                        cachedValue = null;
                         await cache.RemoveAsync(summaryKey);
                         return Results.StatusCode(500);
                     }
                 }
-            });
+            })
+            .Produces<CurrencyExchangeSummaryResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status500InternalServerError);
     }
 
     private static CurrencyExchangeSummaryResponse GetFakeResponse(
@@ -120,22 +222,27 @@ public class ExchangeModule : ICarterModule
             }
         }
 
-        IDictionary<string, string[]> columnValues = new Dictionary<string, string[]>();
+        var entries = new List<CurrencyExchangeSummaryValueEntry>();
 
         foreach (var date in dateEntries)
         {
             var count = rnd.Next(10_000);
-            columnValues.Add(date, [date,
-                             $"{count}",
-                             $"{Decimal.Round((decimal)(rnd.NextDouble()*count*123.00), 2)}",
-                             $"{Decimal.Round((decimal)(rnd.NextDouble()*count*97.00), 2)}"]);
+            entries.Add(new CurrencyExchangeSummaryValueEntry
+            {
+                EntryName = date,
+                ColumnValues =
+                        [date,
+                         $"{count}",
+                         $"{Decimal.Round((decimal)(rnd.NextDouble()*count*123.00), 2)}",
+                         $"{Decimal.Round((decimal)(rnd.NextDouble()*count*97.00), 2)}"]
+            });
         }
 
         return new CurrencyExchangeSummaryResponse
         {
             ResponseKey = summaryKey,
             ColumnNames = ["Date", "TotalExchangesCount", "TotalSourceAmount", "TotalTargetAmount"],
-            ColumnValues = columnValues
+            Entries = entries.ToArray(),
         };
     }
 

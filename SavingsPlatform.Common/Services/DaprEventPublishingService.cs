@@ -65,5 +65,9 @@ namespace SavingsPlatform.Common.Services
                     return Task.CompletedTask;
                 }));
         }
+
+        public Task PublishEventsToTopic(string topic, ICollection<object> events)
+            => Task.WhenAll(events.Select(e => _daprClient.PublishEventAsync(PubSubName, topic, e)));
+        }
     }
 }

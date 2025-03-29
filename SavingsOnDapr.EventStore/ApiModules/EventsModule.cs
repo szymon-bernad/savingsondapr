@@ -2,9 +2,12 @@
 using Dapr;
 using Dapr.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
+using SavingsOnDapr.EventStore.Handlers;
 using SavingsOnDapr.EventStore.Store;
+using SavingsPlatform.Common.Services;
 using SavingsPlatform.Contracts.Accounts.Events;
 using SavingsPlatform.Contracts.Accounts.Models;
+using SavingsPlatform.Contracts.Accounts.Requests;
 
 namespace SavingsOnDapr.EventStore.ApiModules;
 
@@ -54,39 +57,14 @@ public class EventsModule : ICarterModule
             return Results.Ok();
         });
 
-        // app.MapPost("v1/events/:handle-exchange-completed-event",
-        //     [BulkSubscribe("currencyexchangecompleted", 16)]
-        //     [Topic("pubsub", "currencyexchangecompleted")] 
-        //     async (BulkSubscribeMessage<CurrencyExchangeCompleted> eventsMsg,
-        //             CurrencyExchangeEventStore store) =>
-        //     {
-        //         List<BulkSubscribeAppResponseEntry> responseEntries = new List<BulkSubscribeAppResponseEntry>();
-        //
-        //         var eventGroups = eventsMsg.Entries.GroupBy(e => $"{e.Event.SourceCurrency}=>{e.Event.TargetCurrency}_{e.Event.Timestamp:yyyy-MM-dd}");
-        //
-        //         var res = await Task.WhenAll(eventGroups.Select(async eg =>
-        //         {
-        //             var events = eg.Select(e => e.Event).ToList();
-        //
-        //             try
-        //             {
-        //                 await store.AppendEventsAsync(eg.Key, events, CancellationToken.None);
-        //                 return eg.Select(e => new BulkSubscribeAppResponseEntry(
-        //                     e.EntryId, BulkSubscribeAppResponseStatus.SUCCESS));
-        //             }
-        //             catch(Exception ex)
-        //             {
-        //                 return eg.Select(e => new BulkSubscribeAppResponseEntry(
-        //                     e.EntryId, BulkSubscribeAppResponseStatus.RETRY));
-        //             }
-        //         }));
-        //
-        //         foreach (var r in res)
-        //         {
-        //             responseEntries.AddRange(r);
-        //         }
-        //         return Results.Ok(new BulkSubscribeAppResponse(responseEntries));
-        //     });
+        app.MapPost("/v1/requests/summary",
+            [Topic("pubsub", "summaryrequests")] async (
+                CurrencyExchangeSummaryRequest request,
+                ICurrencyExchangeSummaryRequestHandler handler) =>
+            {
+                await handler.Handle(request);
+                return Results.Ok();
+            });
 
         app.MapGet("v1/events/account/{id}",
             async (AccountHierarchyEventStore store, string id) =>
@@ -113,6 +91,5 @@ public class EventsModule : ICarterModule
             });
 
         app.MapGet("/healthz", () => Results.Ok());
-
     }
 }

@@ -11,7 +11,8 @@
   <ItemGroup>
     <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.2.0" />
     <PackageReference Include="Carter" Version="8.2.1" />
-	<PackageReference Include="Dapr.AspNetCore" Version="1.15.0" />
+	<PackageReference Include="Dapr.AspNetCore" Version="1.15.2" />
+	<PackageReference Include="Dapr.Client" Version="1.15.2" />
 	<PackageReference Include="Dapr.Workflow" Version="1.15.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.6" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.6" />

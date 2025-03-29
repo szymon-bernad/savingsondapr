@@ -9,8 +9,8 @@
   <ItemGroup>
     <PackageReference Include="Dapr.Actors" Version="1.15.0" />
     <PackageReference Include="Dapr.Actors.AspNetCore" Version="1.15.0" />
-    <PackageReference Include="Dapr.AspNetCore" Version="1.15.0" />
-    <PackageReference Include="Dapr.Client" Version="1.15.0" />
+    <PackageReference Include="Dapr.AspNetCore" Version="1.15.2" />
+    <PackageReference Include="Dapr.Client" Version="1.15.2" />
     <PackageReference Include="Marten" Version="7.38.0" />
   </ItemGroup>
 

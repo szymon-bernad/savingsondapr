@@ -1,7 +1,9 @@
 ﻿using Carter;
 using Microsoft.AspNetCore.Mvc;
 using SavingsOnDapr.EventStore.Store;
+using SavingsPlatform.Common.Services;
 using SavingsPlatform.Contracts.Accounts.Enums;
+using SavingsPlatform.Contracts.Accounts.Requests;
 
 namespace SavingsOnDapr.EventStore.ApiModules;
 
@@ -9,6 +11,14 @@ public class CurrencyExchangeModule : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
+        app.MapPost("v1/currency-exchange-summary/:init",
+            async ([FromServices]IEventPublishingService pubService,
+            [FromBody]CurrencyExchangeSummaryRequest request) =>
+        {
+            await pubService.PublishEventsToTopic("summaryrequests", [request]);
+            return Results.Accepted();
+        });
+
         app.MapGet("v1/events/currency-exchange-summary/{source:alpha}/{target:alpha}/{forDate:datetime}",
             async (CurrencyExchangeEventStore store, Currency source, Currency target, DateTime forDate, [FromQuery]DateTime? toDate = null) =>
             {

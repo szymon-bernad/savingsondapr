@@ -28,7 +28,7 @@ public class CurrencyExchangeSummaryRequestHandler(
         }
 
         var results = await Task.WhenAll(streamIds.Select(streamId => _store.GetSummary(streamId)));
-        var entries = results.Select(r => new CurrencyExchangeSummaryValueEntry 
+        var entries = results.Where(r => r is not null).Select(r => new CurrencyExchangeSummaryValueEntry 
         {
             EntryName = $"{request.SourceCurrency}=>{request.TargetCurrency}_{r.SummaryDate:yyyy-MM-dd}",
             ColumnValues = 

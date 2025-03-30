@@ -87,7 +87,7 @@ public class ExchangeModule : ICarterModule
 
                 var summaryKey = toDate.HasValue ?
                     $"{source}=>{target}_{forDate:yyyy-MM-dd}_{toDate:yyyy-MM-dd}" :
-                    $"{source}=>{target}_{forDate:yyyy-MM-dd}";
+                    $"{source}=>{target}_{forDate:yyyy-MM-dd}_{forDate:yyyy-MM-dd}";
 
                 var cachedValue = await cache.GetStringAsync(summaryKey);
 
@@ -176,7 +176,7 @@ public class ExchangeModule : ICarterModule
 
                 var summaryKey = toDate.HasValue ?
                     $"{source}=>{target}_{forDate:yyyy-MM-dd}_{toDate:yyyy-MM-dd}" :
-                    $"{source}=>{target}_{forDate:yyyy-MM-dd}";
+                    $"{source}=>{target}_{forDate:yyyy-MM-dd}_{forDate:yyyy-MM-dd}";
 
                 var cachedValue = await cache.GetStringAsync(summaryKey);
                 if (string.IsNullOrWhiteSpace(cachedValue))

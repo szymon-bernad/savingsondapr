@@ -7,13 +7,13 @@ services:
       - "9411:9411"  # allows us to access the web console
   
   placement:
-    image: "daprio/dapr:1.15.1"
+    image: "daprio/dapr:1.15.3"
     command: ["./placement", "--port", "50000"]
     ports:
       - "50000:50000"
 
   scheduler:
-    image: "daprio/dapr:1.15.1"
+    image: "daprio/dapr:1.15.3"
     command: ["./scheduler", "--port", "50007"]
     ports:
       - "50007:50007"
@@ -58,7 +58,7 @@ services:
       - postgres
 
   savingsondapr.api-dapr:
-    image: "daprio/daprd:1.15.1"
+    image: "daprio/daprd:1.15.3"
     network_mode: "service:savingsondapr.api"
     depends_on:
       postgres:
@@ -76,7 +76,7 @@ services:
       - postgres
   
   currencyexchange.api-dapr:
-    image: "daprio/daprd:1.15.1"
+    image: "daprio/daprd:1.15.3"
     network_mode: "service:currencyexchange.api"
     depends_on:
       postgres:
@@ -94,7 +94,7 @@ services:
       - postgres
 
   savingsondapr.eventstore-dapr:
-    image: "daprio/daprd:1.15.1"
+    image: "daprio/daprd:1.15.3"
     network_mode: "service:savingsondapr.eventstore"
     depends_on:
       postgres:
@@ -110,7 +110,7 @@ services:
       dockerfile: ./Dashboard.Api/Dockerfile
 
   dashboard.api-dapr:
-    image: "daprio/daprd:1.15.1"
+    image: "daprio/daprd:1.15.3"
     network_mode: "service:dashboard.api"
     depends_on:
       savingsondapr.api:

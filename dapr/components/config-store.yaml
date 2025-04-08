@@ -1,0 +1,18 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: app-cfg
+spec:
+  type: configuration.redis
+  version: v1
+  metadata:
+  - name: redisHost
+    value: redis:6379
+  - name: redisPassword
+    value: "examplexamplexample"
+  - name: dialTimeout
+    value: 15s
+scopes:
+- dapr-savings-api
+- dapr-exchange-api
+- dapr-dashboard-api

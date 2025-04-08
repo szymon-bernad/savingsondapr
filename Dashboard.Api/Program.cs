@@ -29,14 +29,13 @@ jsonOptions.Converters.Add(new JsonStringEnumConverter());
 
 builder.Services.Configure<AccountsApiConfig>(builder.Configuration.GetSection("AccountsApiConfig"));
 builder.Services.Configure<ExchangeApiConfig>(builder.Configuration.GetSection("ExchangeApiConfig"));
+builder.Services.Configure<EventStoreApiConfig>(builder.Configuration.GetSection("EventStoreApiConfig"));
 
 builder.Services.AddScoped<IAccountsApiClient, AccountsApiClient>()
                 .AddScoped<IExchangeApiClient, ExchangeApiClient>()
-                .AddScoped<IEventPublishingService, DaprEventPublishingService>();
+                .AddScoped<IEventPublishingService, DaprEventPublishingService>()
+                .AddScoped<IEventStoreApiClient, EventStoreApiClient>();
 var svcConfig = builder.Configuration.GetSection("ServiceConfig").Get<ServiceConfig>();
-
-var daprHttpPort = Environment.GetEnvironmentVariable("DAPR_HTTP_PORT") ??
-                    throw new ApplicationException("DAPR_HTTP_PORT is not set as Env Var");
 builder.Services.AddDaprClient(dpr => { dpr.UseJsonSerializationOptions(jsonOptions); });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

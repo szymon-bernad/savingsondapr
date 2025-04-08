@@ -9,4 +9,6 @@ public record EventStoreApiConfig
 
     public required string ToQueryParameter { get; init; } = "toDate";
 
+    public required string InitCurrencyExchangeSummaryEndpoint { get; init; } = "v1/currency-exchange-summary/:init";
+
 }

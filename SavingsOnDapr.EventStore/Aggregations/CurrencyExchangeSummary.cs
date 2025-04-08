@@ -43,13 +43,8 @@ public class CurrencyExchangeSummary
         }
     }
 
-    public CurrencyExchangeSummaryDto MapToDto()
+    public CurrencyExchangeSummaryDto? MapToDto()
     {
-        if (_currentExchange is null)
-        {
-            return new CurrencyExchangeSummaryDto();
-        }
-
         return _currentExchange;
     }
 }

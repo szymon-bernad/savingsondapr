@@ -104,6 +104,7 @@ services:
       - NAMESPACE=savings
       - AccountsApiConfig__AccountsApiServiceName=dapr-savings-api
       - ExchangeApiConfig__ApiServiceName=dapr-exchange-api
+      - EventStoreApiConfig__EventStoreApiServiceName=dapr-savings-evt
       - OTEL_EXPORTER_ZIPKIN_ENDPOINT=http://zipkin:9411/api/v2/spans
     ports:
       - "5170:8080"

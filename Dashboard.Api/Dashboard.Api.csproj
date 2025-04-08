@@ -8,9 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include=".config\dotnet-tools.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.2.0" />
     <PackageReference Include="Carter" Version="8.2.1" />
-    <PackageReference Include="Dapr.AspNetCore" Version="1.15.0" />
+    <PackageReference Include="Dapr.AspNetCore" Version="1.15.2" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.2" />
     <PackageReference Include="Microsoft.Identity.Web" Version="3.6.2" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
@@ -23,5 +27,10 @@
     <ProjectReference Include="..\SavingsPlatform.Common\SavingsPlatform.Common.csproj" />
     <ProjectReference Include="..\SavingsPlatform.Contracts\SavingsPlatform.Contracts.csproj" />
   </ItemGroup>
-
+	
+<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+  <Exec Command="dotnet tool restore" />
+  <Exec Command="dotnet swagger tofile --output obj/swagger.json $(OutputPath)$(AssemblyName).dll v1" EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development" />
+</Target>
+	
 </Project>

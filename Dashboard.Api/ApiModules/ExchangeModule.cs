@@ -1,20 +1,13 @@
-﻿using Azure;
-using Carter;
-using Dapr.Client;
+﻿using Carter;
 using Dashboard.Api.ApiClients;
-using JasperFx.Core;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.ObjectPool;
 using SavingsPlatform.Contracts.Accounts.Enums;
-using SavingsPlatform.Contracts.Accounts.Models;
 using SavingsPlatform.Contracts.Accounts.Requests;
 using SavingsPlatform.Contracts.CurrencyExchange.Response;
 using System.Security.Claims;
 using System.Text.Json;
-using static Dapr.Client.Autogen.Grpc.v1.Dapr;
 using DaprClient = Dapr.Client.DaprClient;
 
 namespace Dashboard.Api.ApiModules;
@@ -61,14 +54,14 @@ public class ExchangeModule : ICarterModule
 
         app.MapPost("/api/currency-exchange-summary/{source:alpha}/{target:alpha}/{forDate:datetime}",
             async (
-                    HttpRequest request,
-                    Currency source,
-                    Currency target,
-                    DateTime forDate,
-                     [FromServices] IEventStoreApiClient apiClient,
-                    [FromServices] DaprClient daprClient,
-                   [FromServices] IDistributedCache cache,
-                    [FromQuery] DateTime? toDate = null) =>
+                HttpRequest request,
+                Currency source,
+                Currency target,
+                DateTime forDate,
+                [FromServices] IEventStoreApiClient apiClient,
+                [FromServices] DaprClient daprClient,
+                [FromServices] IDistributedCache cache,
+                [FromQuery] DateTime? toDate = null) =>
             {
                 if (forDate.Date > DateTime.UtcNow.Date)
                 {

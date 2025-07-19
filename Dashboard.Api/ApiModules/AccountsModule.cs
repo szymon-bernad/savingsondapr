@@ -1,7 +1,9 @@
 ﻿using Carter;
 using Dashboard.Api.ApiClients;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using SavingsPlatform.Contracts.Accounts.Models;
+using SavingsPlatform.Contracts.Accounts.Requests;
 using System.Security.Claims;
 using System.Text.Json;
 
@@ -58,6 +60,28 @@ public class AccountsModule : ICarterModule
         })
         .RequireAuthorization()
         .WithTags(["users-accounts"]);
+
+        app.MapPost("/api/users/{userid}/:add-current-account",
+            async (
+                string userid,
+                IAccountsApiClient apiClient,
+                ClaimsPrincipal user,
+                [FromBody] CreateCurrentAccount request
+                ) =>
+            {
+                if (user.Identity?.IsAuthenticated ?? false)
+                {
+                    var oidClaim = user.Claims?.FirstOrDefault(c => c.Type == OidClaimType);
+                    if (oidClaim?.Value == userid)
+                    {
+                        await apiClient.AddCurrentAccountAsync(request.ExternalRef, request.AccountCurrency, userid);
+                        return Results.NoContent();
+                    }
+                }
+                return Results.Forbid();
+            })
+            .RequireAuthorization()
+            .WithTags(["users-accounts"]);
 
         app.MapGet("/healthz", () => Results.Ok()).WithTags(["platform"]);
     }

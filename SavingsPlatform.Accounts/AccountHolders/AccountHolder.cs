@@ -1,10 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using SavingsPlatform.Common.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using SavingsPlatform.Contracts.Accounts;
 
 namespace SavingsPlatform.Accounts.AccountHolders;
 
@@ -17,15 +13,15 @@ public class AccountHolder
     private readonly IStateEntryRepository<AccountHolderState> _repository = repository;
     private readonly ILogger<AccountHolder> _logger = logger;
 
-    public async Task Create(string key, string? username, string externalRef, string[] accountIds)
+    public async Task Create(string key, string? username, string externalRef, ICollection<AccountInfo> accounts)
     {
         var state = new AccountHolderState
         {
             Key = key,
             Username = username,
             ExternalRef = externalRef,
-            AccountIds = accountIds,
         };
+        state.Accounts.AddRange(accounts);
 
         var exists = (await _repository.GetAccountAsync(externalRef)) is not null;
 
@@ -37,20 +33,16 @@ public class AccountHolder
         await _repository.AddAccountAsync(state);
     }
 
-    public Task AddAccount(string accountId)
+    public Task AddAccounts(ICollection<AccountInfo> accounts)
     {
         if (_state is null)
         {
             throw new InvalidOperationException($"AccountHolder does not exist");
         }
 
-        if(_state.AccountIds.Contains(accountId))
-        {
-            _logger.LogWarning($"Account {accountId} already assigned to AccountHolder {_state.Key}");
-            return Task.CompletedTask;
-        }
+        var accountsToAdd = accounts.Except(_state.Accounts).Distinct().ToList();
 
-        _state.AccountIds.Add(accountId);
+        _state.Accounts.AddRange(accountsToAdd);
         return _repository.TryUpdateAccountAsync(_state, null);
     }
 

@@ -59,5 +59,10 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
                 new InstantAccessSavingsAccount(_repository, _simulationConfig, result) :
                 null;
         }
+
+        public Task<InstantAccessSavingsAccount?> TryGetInstanceByExternalRefAsync(string externalRef)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

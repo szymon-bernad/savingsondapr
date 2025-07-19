@@ -11,12 +11,15 @@ using SavingsPlatform.Accounts.Actors;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Accounts.Current.Models;
+using SavingsPlatform.Accounts.Handlers;
 using SavingsPlatform.Common.Config;
+using SavingsPlatform.Common.Helpers;
 using SavingsPlatform.Common.Interfaces;
 using SavingsPlatform.Common.Services;
 using SavingsPlatform.Contracts.Accounts.Commands;
 using SavingsPlatform.Contracts.Accounts.Enums;
 using SavingsPlatform.Contracts.Accounts.Events;
+using SavingsPlatform.Contracts.Accounts.Models;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -102,6 +105,17 @@ public class PlatformModule : ICarterModule
             }
             return Results.NoContent();
         }).WithTags(["platform"]);
+
+        app.MapPost("v1/accounts/:handle-created-event",
+            [Topic("pubsub", "accountcreated")]
+            async (AccountCreated @event, IActorProxyFactory actorProxyFactory) =>
+            {
+                    var actorInstance = actorProxyFactory.CreateActorProxy<IAccountCreationActor>(
+                                new ActorId(@event.ExternalRef),
+                                nameof(AccountCreationActor));
+
+                    await actorInstance.HandleAccountCreatedAsync(@event.AccountId);
+            }).WithTags(["platform"]);
 
         app.MapPost("/api/platform/publish-events",
                     async (IStateEntryQueryHandler<InstantAccessSavingsAccountState> iasaRepository,
@@ -194,6 +208,14 @@ public class PlatformModule : ICarterModule
 
         app.MapMethods("/api/platform/accrue-interest", ["OPTIONS"],
             () => Task.FromResult(Results.Accepted())).WithTags(["platform"]);
+
+        app.MapPost("/api/platform/accounts/:query-by-ids",
+            async (IAccountsQueryHandler accountsQueryHandler,
+                    string[] accountIds) =>
+            {
+                var results = await accountsQueryHandler.FetchAccountsByIds(accountIds);
+                return Results.Ok(results);
+            }).WithTags(["accounts"]);
 
         app.MapGet("/healthz",
         async (ILogger<PlatformModule> logger,

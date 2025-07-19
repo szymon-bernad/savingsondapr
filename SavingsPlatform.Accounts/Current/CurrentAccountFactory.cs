@@ -38,13 +38,13 @@ internal class CurrentAccountFactory : IAggregateRootFactory<CurrentAccount, Cur
         {
             return new CurrentAccount(_repository, stateEntry, _logger);
         }
-        
+
         throw new InvalidOperationException($"Cannot get instance with externalRef = {externalRef}");
     }
 
     public async Task<CurrentAccount?> TryGetInstanceAsync(string id)
     {
-        if(string.IsNullOrEmpty(id?.Trim()))
+        if (string.IsNullOrEmpty(id?.Trim()))
         {
             throw new InvalidOperationException($"{nameof(id)} cannot be null or empty");
         }
@@ -54,5 +54,16 @@ internal class CurrentAccountFactory : IAggregateRootFactory<CurrentAccount, Cur
         return result is not null ?
             new CurrentAccount(_repository, result, _logger) :
             null;
+    }
+
+    public async Task<CurrentAccount?> TryGetInstanceByExternalRefAsync(string externalRef)
+    {
+        var stateEntry = (await _repository.QueryAccountsByKeyAsync(["externalRef"], [externalRef])).SingleOrDefault();
+        if (stateEntry is not null)
+        {
+            return new CurrentAccount(_repository, stateEntry, _logger);
+        }
+
+        return null;
     }
 }

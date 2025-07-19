@@ -13,6 +13,7 @@ using SavingsPlatform.Accounts.Current;
 using SavingsPlatform.Accounts.Actors;
 using SavingsPlatform.Accounts.ApiClients;
 using SavingsPlatform.Accounts.AccountHolders;
+using SavingsPlatform.Accounts.Handlers;
 
 namespace SavingsPlatform.Accounts.DependencyInjection;
 
@@ -34,10 +35,12 @@ public static class SavingsPlatformAccountsDIExt
             .AddTransient<IStateMapper<AggregateState<AccountHolderDto>, AccountHolderState>, AccountHolderMapper>()
             .AddScoped<IStateEntryRepository<AccountHolderState>, AccountHolderRepository>()
             .AddScoped<IStateEntryQueryHandler<AccountHolderState>, AccountHolderRepository>()
+            .AddScoped<IAccountsQueryHandler, AccountsQueryHandler>()
             .AddTransient<IAggregateRootFactory<AccountHolder, AccountHolderState>, AccountHolderFactory>()
             .AddActors(options =>
                 {
                     options.Actors.RegisterActor<DepositTransferActor>();
+                    options.Actors.RegisterActor<AccountCreationActor>();
                 });
 
         services.Configure<EventStoreApiConfig>(config.GetSection("EventStoreApiConfig"));

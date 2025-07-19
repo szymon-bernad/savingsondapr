@@ -25,6 +25,14 @@ internal class ExchangeRatesService : IExchangeRatesService
         { $"{Currency.EUR}-{Currency.CAD}", 1.55m },
         { $"{Currency.CHF}-{Currency.EUR}", 0.95m },
         { $"{Currency.EUR}-{Currency.CHF}", 1.05m },
+        { $"{Currency.PLN}-{Currency.NOK}", 2.75m },
+        { $"{Currency.NOK}-{Currency.PLN}", 0.37m },
+
+        { $"{Currency.USD}-{Currency.USD}", 0.99m },
+        { $"{Currency.EUR}-{Currency.EUR}", 0.99m },
+        { $"{Currency.PLN}-{Currency.PLN}", 0.99m },
+        { $"{Currency.NOK}-{Currency.NOK}", 0.99m },
+        { $"{Currency.CHF}-{Currency.CHF}", 0.99m },
     };
 
     public ExchangeRatesService(IMemoryCache cache)

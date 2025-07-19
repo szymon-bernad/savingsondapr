@@ -46,6 +46,8 @@ internal class AccountHolderFactory(IStateEntryRepository<AccountHolderState> re
             null;
     }
 
-
-
+    public Task<AccountHolder?> TryGetInstanceByExternalRefAsync(string externalRef)
+    {
+        throw new NotImplementedException();
+    }
 }

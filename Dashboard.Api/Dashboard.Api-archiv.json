@@ -1,0 +1,283 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Dashboard.Api | v1",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/users/{userid}/accounts": {
+      "get": {
+        "tags": [
+          "users-accounts"
+        ],
+        "parameters": [
+          {
+            "name": "userid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/healthz": {
+      "get": {
+        "tags": [
+          "platform"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/currency/exchange-order": {
+      "post": {
+        "tags": [
+          "exchange"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurrencyExchangeOrder"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/currency/exchange-query": {
+      "post": {
+        "tags": [
+          "exchange"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurrencyExchangeQuery"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/currency-exchange-summary/{source}/{target}/{forDate}": {
+      "get": {
+        "tags": [
+          "Dashboard.Api"
+        ],
+        "parameters": [
+          {
+            "name": "source",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Currency2"
+            }
+          },
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Currency2"
+            }
+          },
+          {
+            "name": "forDate",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "default": null
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrencyExchangeSummaryResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Accepted"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Currency": {
+        "enum": [
+          "EUR",
+          "USD",
+          "GBP",
+          "CHF",
+          "PLN",
+          "NOK",
+          "CAD"
+        ]
+      },
+      "Currency2": {
+        "pattern": "^[A-Za-z]*$",
+        "enum": [
+          "EUR",
+          "USD",
+          "GBP",
+          "CHF",
+          "PLN",
+          "NOK",
+          "CAD"
+        ],
+        "type": "string"
+      },
+      "CurrencyExchangeOrder": {
+        "required": [
+          "orderId",
+          "debtorExternalRef",
+          "beneficiaryExternalRef",
+          "sourceCurrency",
+          "targetCurrency",
+          "sourceAmount",
+          "exchangeRate"
+        ],
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string"
+          },
+          "debtorExternalRef": {
+            "type": "string"
+          },
+          "beneficiaryExternalRef": {
+            "type": "string"
+          },
+          "sourceCurrency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "targetCurrency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "sourceAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "exchangeRate": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "orderType": {
+            "$ref": "#/components/schemas/ExchangeOrderType"
+          }
+        }
+      },
+      "CurrencyExchangeQuery": {
+        "required": [
+          "source",
+          "target",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "target": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "CurrencyExchangeSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "responseKey": {
+            "type": "string"
+          },
+          "columnNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "columnValues": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "nullable": true
+          }
+        }
+      },
+      "ExchangeOrderType": {
+        "enum": [
+          "GuaranteedRate",
+          "MarketRate",
+          "LimitOrder"
+        ],
+        "default": "MarketRate"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "users-accounts"
+    },
+    {
+      "name": "platform"
+    },
+    {
+      "name": "exchange"
+    },
+    {
+      "name": "Dashboard.Api"
+    }
+  ]
+}

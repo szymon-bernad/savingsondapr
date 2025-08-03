@@ -1,6 +1,10 @@
-﻿using Dapr.Actors.Runtime;
+﻿using Castle.Core.Logging;
+using Dapr.Actors.Runtime;
+using Microsoft.Extensions.Logging;
 using SavingsPlatform.Accounts.AccountHolders;
 using SavingsPlatform.Accounts.Actors.Services;
+using SavingsPlatform.Accounts.Aggregates.InstantAccess;
+using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Accounts.Current;
 using SavingsPlatform.Accounts.Current.Models;
 using SavingsPlatform.Common.Helpers;
@@ -16,7 +20,9 @@ namespace SavingsPlatform.Accounts.Actors;
 public class AccountCreationActor(
     ActorHost host,
     IAggregateRootFactory<CurrentAccount, CurrentAccountState> aggregateFactory,
-    IAggregateRootFactory<AccountHolder, AccountHolderState> accHolderFactory) 
+    IAggregateRootFactory<InstantAccessSavingsAccount, InstantAccessSavingsAccountState> iasaAggregateFactory,
+    IAggregateRootFactory<AccountHolder, AccountHolderState> accHolderFactory,
+    ILogger<AccountCreationActor> logger) 
     : Actor(host), IAccountCreationActor
 {
     private const string AccountCreationState = nameof(AccountCreationState);
@@ -62,15 +68,42 @@ public class AccountCreationActor(
                 }
             }
         }
-        catch (Exception)
+        catch (KeyNotFoundException kex)
         {
-
+            logger.LogWarning(
+                kex,
+                $"State {AccountCreationState} not found for Actor Id = {Id}. " +
+                "This is expected if the actor is being created for the first time.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, $"Error retrieving state {AccountCreationState} for Actor Id = {Id}.");
+            throw;
         }
 
+        if (data.AccountType == AccountType.CurrentAccount)
+        {
+            await InitiateCurrentAccount(data);
+        }
+        else if (data.AccountType == AccountType.SavingsAccount)
+        {
+            await InitiateInstantAccessSavingsAccount(data);
+        }
+        else
+        {
+            throw new InvalidOperationException($"Unsupported account type: {data.AccountType}");
+        }
+
+        data = data with { Status = AccountCreationStatus.CreatedUnassigned };
+        await StateManager.SetStateAsync(AccountCreationState, data);
+    }
+
+    private async Task InitiateCurrentAccount(AccountCreationData data)
+    {
         var instance = await aggregateFactory.TryGetInstanceByExternalRefAsync(data.ExternalRef);
         if (instance is not null)
         {
-            data = data with { Status = AccountCreationStatus.FailedDuplicateExternalRef};
+            data = data with { Status = AccountCreationStatus.FailedDuplicateExternalRef };
             await StateManager.SetStateAsync(AccountCreationState, data);
 
             throw new InvalidOperationException(
@@ -84,8 +117,26 @@ public class AccountCreationActor(
                 data.ExternalRef,
                 data.UserId,
                 data.Currency));
+    }
 
-        data = data with { Status = AccountCreationStatus.CreatedUnassigned };
-        await StateManager.SetStateAsync(AccountCreationState, data);
+    private async Task InitiateInstantAccessSavingsAccount(AccountCreationData data)
+    {
+        var instance = await iasaAggregateFactory.TryGetInstanceByExternalRefAsync(data.ExternalRef);
+        if (instance is not null)
+        {
+            data = data with { Status = AccountCreationStatus.FailedDuplicateExternalRef };
+            await StateManager.SetStateAsync(AccountCreationState, data);
+            throw new InvalidOperationException(
+                $"InstantAccessSavingsAccount with {nameof(InstantAccessSavingsAccountState.ExternalRef)} = {data.ExternalRef} already exists.");
+        }
+        instance = await iasaAggregateFactory.GetInstanceAsync();
+        await instance.CreateAsync(
+            new CreateInstantSavingsAccountCommand(
+                Guid.Empty.ToString(),
+                data.ExternalRef,
+                data.InterestRate,
+                data.CurrentAccountId,
+                data.UserId,
+                data.Currency));
     }
 }

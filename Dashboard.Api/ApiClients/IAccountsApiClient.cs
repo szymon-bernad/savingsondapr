@@ -1,4 +1,4 @@
-﻿using Dapr.Client;
+﻿using SavingsPlatform.Contracts.Accounts.Commands;
 using SavingsPlatform.Contracts.Accounts.Enums;
 using SavingsPlatform.Contracts.Accounts.Models;
 
@@ -10,5 +10,7 @@ public interface IAccountsApiClient
 
     Task<ICollection<BaseAccountResponse>> GetAllUserAccountsAsync(string userId);
 
-    Task AddCurrentAccountAsync(string externalRef, Currency currency, string userId);
+    Task AddUserAccountAsync(CreateAccountRequest request);
+
+    Task<CurrencyRateResponse> GetSavingsInterestRateAsync(Currency accountCurrency);
 }

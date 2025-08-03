@@ -18,7 +18,7 @@ public record InstantAccessAccountResponse(
     {
         var details = new Dictionary<string, string>
         {
-            { $"{nameof(InterestRate)}", InterestRate.ToString("F2") },
+            { $"{nameof(InterestRate)}", (InterestRate*100m).ToString("F2") },
             { $"{nameof(AccruedInterest)}", AccruedInterest.ToString("F2") },
             { $"{nameof(CurrentAccountId)}", CurrentAccountId },
             { $"{nameof(ActivatedOn)}", ActivatedOn?.ToString("yyyy-MM-dd HH:mm:ss.fff") ?? string.Empty },

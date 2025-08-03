@@ -1,12 +1,11 @@
 ﻿using Carter;
-using Microsoft.JSInterop;
-using SavingsPlatform.Accounts.Aggregates.InstantAccess;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Accounts.Current.Models;
 using SavingsPlatform.Common.Interfaces;
 using SavingsPlatform.Common.Services;
 using SavingsPlatform.Contracts.Accounts.Commands;
 using SavingsPlatform.Contracts.Accounts.Enums;
+using SavingsPlatform.Contracts.Accounts.Models;
 using SavingsPlatform.Contracts.Accounts.Requests;
 
 namespace SavingsOnDapr.Api.ApiModules;
@@ -40,7 +39,14 @@ public class SavingsModule : ICarterModule
                     return Results.BadRequest("Current Account not found");
                 }
 
-                await publishingService.PublishCommand(new CreateInstantSavingsAccountCommand(Guid.NewGuid().ToString(), request.ExternalRef, request.InterestRate, caResult.First().Key));
+                await publishingService.PublishCommand(
+                    new CreateInstantSavingsAccountCommand(
+                        Guid.NewGuid().ToString(),
+                        request.ExternalRef,
+                        request.InterestRate,
+                        caResult.First().Key,
+                        request.UserId,
+                        request.AccountCurrency));
 
                 return Results.Accepted($"/api/savings/savings-account/{request.ExternalRef}");
             }).WithTags(["savings"]);
@@ -70,5 +76,21 @@ public class SavingsModule : ICarterModule
             var result = await repo.QueryAccountsByKeyAsync(["data.activatedOn LessThan", "data.totalBalance GreaterThan"], [DateTime.UtcNow.ToString("yyyy-MM-dd"), 0]);
             return Results.Ok(result);
         }).WithTags(["savings"]);
+
+        app.MapGet("/api/savings/{currency}/interest-rate",
+            (Currency currency) =>
+            {
+                var rnd = new Random();
+                var rate = currency switch
+                {
+                    Currency.GBP => Math.Round(0.015m + ((decimal)(rnd.NextDouble() - 0.5) * 0.0015m), 4, MidpointRounding.ToPositiveInfinity),
+                    Currency.EUR => Math.Round(0.025m + ((decimal)(rnd.NextDouble() - 0.5) * 0.005m), 4, MidpointRounding.ToPositiveInfinity),
+                    Currency.USD => Math.Round(0.018m + ((decimal)(rnd.NextDouble() - 0.5) * 0.0025m), 4, MidpointRounding.ToPositiveInfinity),
+                    Currency.PLN => Math.Round(0.03m + ((decimal)(rnd.NextDouble() - 0.5) * 0.0025m), 4, MidpointRounding.ToPositiveInfinity),
+                    _ => Math.Round(0.0199m + ((decimal)(rnd.NextDouble() - 0.5) * 0.001m), 4, MidpointRounding.ToPositiveInfinity),
+                };
+
+                return Results.Ok(new CurrencyRateResponse(currency, rate, DateTime.UtcNow));
+            }).WithTags(["savings"]);
     }
 }

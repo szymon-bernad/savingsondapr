@@ -23,7 +23,6 @@ namespace SavingsPlatform.Accounts.Handlers;
 public class CreateCurrentAccountCmdHandler : IRequestHandler<CreateCurrentAccountCommand>
 {
     private readonly IAggregateRootFactory<CurrentAccount, CurrentAccountState> _aggregateFactory;
-    private readonly IThreadSynchronizer _threadSynchronizer;
     private readonly IActorProxyFactory _actorProxyFactory;
 
     public CreateCurrentAccountCmdHandler(
@@ -32,7 +31,6 @@ public class CreateCurrentAccountCmdHandler : IRequestHandler<CreateCurrentAccou
         IActorProxyFactory actorProxyFactory)
     {
         _aggregateFactory = aggregateFactory;
-        _threadSynchronizer = threadSynchronizer;
         this._actorProxyFactory = actorProxyFactory;
     }
 
@@ -61,6 +59,5 @@ public class CreateCurrentAccountCmdHandler : IRequestHandler<CreateCurrentAccou
                 CreatedAt = DateTime.UtcNow,
                 UserId = request.UserId,
             });
-
     }
 }

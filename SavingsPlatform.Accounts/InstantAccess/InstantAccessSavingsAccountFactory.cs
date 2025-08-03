@@ -60,9 +60,15 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
                 null;
         }
 
-        public Task<InstantAccessSavingsAccount?> TryGetInstanceByExternalRefAsync(string externalRef)
+        public async Task<InstantAccessSavingsAccount?> TryGetInstanceByExternalRefAsync(string externalRef)
         {
-            throw new NotImplementedException();
+            var stateEntry = (await _repository.QueryAccountsByKeyAsync(["externalRef"], [externalRef])).SingleOrDefault();
+            if (stateEntry is not null)
+            {
+                return new InstantAccessSavingsAccount(_repository, _simulationConfig, stateEntry);
+            }
+
+            return null;
         }
     }
 }

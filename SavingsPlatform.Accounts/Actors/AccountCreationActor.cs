@@ -47,7 +47,7 @@ public class AccountCreationActor(
                     $"AccountHolder with UserId = {actorData.UserId} not found.");
             }
 
-            await accHolder.AddAccounts([new AccountInfo(accountId, AccountType.CurrentAccount)]);
+            await accHolder.AddAccounts([new AccountInfo(accountId, actorData.AccountType)]);
 
             actorData = actorData with { Status = AccountCreationStatus.Completed, AccountId = accountId };
             await StateManager.SetStateAsync(AccountCreationState, actorData);

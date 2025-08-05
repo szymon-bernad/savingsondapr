@@ -109,13 +109,13 @@ public class AccountsApiClient(IOptions<AccountsApiConfig> config,
 
         if (string.IsNullOrEmpty(request.SavingsDetails.CurrentAccountRef))
         {
-            throw new ArgumentException($"{request.SavingsDetails.CurrentAccountRef} must be provided for Savings Account creation");
+            throw new ArgumentException($"{nameof(request.SavingsDetails.CurrentAccountRef)} must be provided for Savings Account creation");
         }
 
 
         if (request.SavingsDetails.InterestRate < 0.0001m)
         {
-            throw new ArgumentException($"{request.SavingsDetails.InterestRate} must be a valid decimal value (grater than 0.0001)");
+            throw new ArgumentException($"{nameof(request.SavingsDetails.InterestRate)} must be a valid decimal value (greater than 0.0001)");
         }
     }
 }

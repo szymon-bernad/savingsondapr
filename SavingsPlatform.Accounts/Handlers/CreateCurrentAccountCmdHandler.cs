@@ -27,7 +27,6 @@ public class CreateCurrentAccountCmdHandler : IRequestHandler<CreateCurrentAccou
 
     public CreateCurrentAccountCmdHandler(
         IAggregateRootFactory<CurrentAccount, CurrentAccountState> aggregateFactory,
-        IThreadSynchronizer threadSynchronizer,
         IActorProxyFactory actorProxyFactory)
     {
         _aggregateFactory = aggregateFactory;

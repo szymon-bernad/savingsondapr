@@ -1,4 +1,5 @@
 ﻿using SavingsPlatform.Common.Interfaces;
+using SavingsPlatform.Contracts.Accounts;
 
 namespace SavingsPlatform.Accounts.AccountHolders;
 
@@ -12,7 +13,7 @@ public record AccountHolderState : IAggregateStateEntry
 
     public required string ExternalRef { get; init; }
 
-    public ICollection<string> AccountIds { get; init; } = new List<string>();
+    public List<AccountInfo> Accounts { get; init; } = [];
 
     public bool HasUnpublishedEvents { get; set; } = false;
 

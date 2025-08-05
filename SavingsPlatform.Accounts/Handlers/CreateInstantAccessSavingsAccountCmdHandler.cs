@@ -4,35 +4,54 @@ using SavingsPlatform.Common.Interfaces;
 using SavingsPlatform.Contracts.Accounts.Commands;
 using MediatR;
 using SavingsPlatform.Common.Helpers;
+using Dapr.Actors;
+using SavingsPlatform.Accounts.Actors;
+using SavingsPlatform.Contracts.Accounts.Enums;
+using SavingsPlatform.Contracts.Accounts.Models;
+using Dapr.Actors.Client;
 
 namespace SavingsPlatform.Accounts.Handlers;
 
 public class CreateInstantAccessSavingsAccountCmdHandler : IRequestHandler<CreateInstantSavingsAccountCommand>
 {
     private readonly IAggregateRootFactory<InstantAccessSavingsAccount, InstantAccessSavingsAccountState> _aggregateFactory;
-    private readonly IThreadSynchronizer _threadSynchronizer;
+    private readonly IActorProxyFactory _actorProxyFactory;
 
     public CreateInstantAccessSavingsAccountCmdHandler(
         IAggregateRootFactory<InstantAccessSavingsAccount, InstantAccessSavingsAccountState> aggregateFactory,
-        IThreadSynchronizer threadSynchronizer)
+        IActorProxyFactory actorProxyFactory)
     {
         _aggregateFactory = aggregateFactory;
-        _threadSynchronizer = threadSynchronizer;
+        _actorProxyFactory = actorProxyFactory;
     }
 
     public async Task Handle(CreateInstantSavingsAccountCommand request, CancellationToken cancellationToken)
     {
-        if(cancellationToken.IsCancellationRequested)
+        if (cancellationToken.IsCancellationRequested)
         {
             throw new TaskCanceledException();
         }
-        var instance = await _aggregateFactory.GetInstanceAsync();
 
-        await _threadSynchronizer.ExecuteSynchronizedAsync(request.ExternalRef, async () =>
+        if (string.IsNullOrEmpty(request.ExternalRef))
+        {
+            throw new InvalidOperationException($"{nameof(request.ExternalRef)} cannot be null or empty.");
+        }
+
+        var actorInstance = _actorProxyFactory.CreateActorProxy<IAccountCreationActor>(
+            new ActorId(request.ExternalRef),
+            nameof(AccountCreationActor));
+
+        await actorInstance.InitiateAsync(
+            new AccountCreationData
             {
-                await instance.CreateAsync(request);
+                ExternalRef = request.ExternalRef,
+                AccountType = AccountType.SavingsAccount,
+                Currency = request.AccountCurrency,
+                CreatedAt = DateTime.UtcNow,
+                UserId = request.UserId,
+                CurrentAccountId = request.CurrentAccountId,
+                InterestRate = request.InterestRate,
             });
-
 
     }
 }

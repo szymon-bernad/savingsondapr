@@ -26,7 +26,7 @@ public class CurrentAccountsModule : ICarterModule
 
             var res = result.First();
             return Results.Ok(
-                new CurrentAccountResponse(res.Key, res.ExternalRef, res.OpenedOn, res.TotalBalance, res.Currency, AccountType.CurrentAccount));
+                new BaseAccountResponse(res.Key, res.ExternalRef, res.OpenedOn, res.TotalBalance, res.Currency, AccountType.CurrentAccount));
         }).WithTags(["accounts"]);
 
         app.MapPost("/api/accounts",
@@ -40,17 +40,14 @@ public class CurrentAccountsModule : ICarterModule
                     return Results.BadRequest("Current Account already exists.");
                 }
 
-                await publishingService.PublishCommand(new CreateCurrentAccountCommand(Guid.NewGuid().ToString(), request.ExternalRef, request.AccountCurrency));
+                await publishingService.PublishCommand(
+                    new CreateCurrentAccountCommand(
+                        Guid.NewGuid().ToString(),
+                        request.ExternalRef,
+                        request.UserId,
+                        request.AccountCurrency));
 
                 return Results.Accepted($"/api/accounts/{request.ExternalRef}");
-            }).WithTags(["accounts"]);
-
-        app.MapPost("/api/accounts/:query-by-ids",
-            async (IStateEntryQueryHandler<CurrentAccountState> repo,
-                    string[] accountIds) =>
-            {
-                var result = await repo.GetAccountsAsync(accountIds);
-                return Results.Ok(result.Select(x => new CurrentAccountResponse(x.Key, x.ExternalRef, x.OpenedOn, x.TotalBalance, x.Currency, AccountType.CurrentAccount)));
             }).WithTags(["accounts"]);
 
         app.MapPost("/api/accounts/:credit",

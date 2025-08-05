@@ -10,5 +10,13 @@ public record AccountsApiConfig
 
     public required string AccountHoldersEndpoint { get; init; } = "/api/account-holders/{0}";
 
-    public required string AccountsByIdsEndpoint { get; init; } = "/api/accounts/:query-by-ids";
+    public required string AccountsByIdsEndpoint { get; init; } = "/api/platform/accounts/:query-by-ids";
+
+    public required string AddAccountsEndpoint { get; init; } = "/api/account-holders/{0}/accounts";
+
+    public required string CreateCurrentAccountEndpoint { get; init; } = "/api/accounts";
+
+    public required string CreateSavingsAccountEndpoint { get; init; } = "/api/savings/savings-accounts";
+
+    public required string SavingsCurrentRateEndpoint { get; init; } = "/api/savings/{0}/interest-rate";
 }

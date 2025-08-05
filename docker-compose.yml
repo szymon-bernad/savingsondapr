@@ -7,13 +7,13 @@ services:
       - "9411:9411"  # allows us to access the web console
   
   placement:
-    image: "daprio/dapr:1.15.3"
+    image: "daprio/dapr:1.15.7-rc.2"
     command: ["./placement", "--port", "50000"]
     ports:
       - "50000:50000"
 
   scheduler:
-    image: "daprio/dapr:1.15.3"
+    image: "daprio/dapr:1.15.7-rc.2"
     command: ["./scheduler", "--port", "50007"]
     ports:
       - "50007:50007"
@@ -42,27 +42,15 @@ services:
     ports:
     - "6379:6379"
 
-  postgres:
-    image: postgres:14-alpine
-    ports:
-      - "5432:5432"
-    volumes:
-      - "./dbinit:/docker-entrypoint-initdb.d"
-      - "pgdata:/var/lib/postgresql/data"
-
   savingsondapr.api:
     build:
       context: .
       dockerfile: ./SavingsOnDapr.Api/Dockerfile
-    depends_on:
-      - postgres
 
   savingsondapr.api-dapr:
-    image: "daprio/daprd:1.15.3"
+    image: "daprio/daprd:1.15.7-rc.2"
     network_mode: "service:savingsondapr.api"
     depends_on:
-      postgres:
-        condition: service_started
       savingsondapr.api:
         condition: service_started
       rabbitmq:
@@ -72,15 +60,11 @@ services:
     build:
       context: .
       dockerfile: ./CurrencyExchange.Api/Dockerfile
-    depends_on:
-      - postgres
   
   currencyexchange.api-dapr:
-    image: "daprio/daprd:1.15.3"
+    image: "daprio/daprd:1.15.7-rc.2"
     network_mode: "service:currencyexchange.api"
     depends_on:
-      postgres:
-        condition: service_started
       currencyexchange.api:
         condition: service_started
       rabbitmq:
@@ -90,15 +74,11 @@ services:
     build:
       context: .
       dockerfile: ./SavingsOnDapr.EventStore/Dockerfile
-    depends_on:
-      - postgres
 
   savingsondapr.eventstore-dapr:
-    image: "daprio/daprd:1.15.3"
+    image: "daprio/daprd:1.15.7-rc.2"
     network_mode: "service:savingsondapr.eventstore"
     depends_on:
-      postgres:
-        condition: service_started
       savingsondapr.eventstore:
         condition: service_started
       rabbitmq:
@@ -110,7 +90,7 @@ services:
       dockerfile: ./Dashboard.Api/Dockerfile
 
   dashboard.api-dapr:
-    image: "daprio/daprd:1.15.3"
+    image: "daprio/daprd:1.15.7-rc.2"
     network_mode: "service:dashboard.api"
     depends_on:
       savingsondapr.api:

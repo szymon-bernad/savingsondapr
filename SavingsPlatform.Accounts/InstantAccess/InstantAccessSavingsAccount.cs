@@ -48,7 +48,7 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
                 request.CurrentAccountId,
                 accountId,
                 AccountType.SavingsAccount,
-                Currency.EUR,
+                request.AccountCurrency,
                 DateTime.UtcNow,
                 typeof(AccountCreated).Name)
         };
@@ -62,6 +62,7 @@ public class InstantAccessSavingsAccount : AccountAggregateRootBase<InstantAcces
             TotalBalance = 0m,
             AccruedInterest = 0m,
             CurrentAccountId = request.CurrentAccountId,
+            Currency = request.AccountCurrency,
             HasUnpublishedEvents = true,
             UnpublishedEvents = eventsToPub,
         };

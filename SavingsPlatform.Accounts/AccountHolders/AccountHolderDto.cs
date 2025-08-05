@@ -1,3 +1,5 @@
-﻿namespace SavingsPlatform.Accounts.AccountHolders;
+﻿using SavingsPlatform.Contracts.Accounts;
 
-public record AccountHolderDto(DateTime AddedOn, string? Username = default, ICollection<string> AccountIds = null);
+namespace SavingsPlatform.Accounts.AccountHolders;
+
+public record AccountHolderDto(DateTime AddedOn, string? Username = default, ICollection<AccountInfo>? Accounts = default);

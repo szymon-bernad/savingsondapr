@@ -78,7 +78,7 @@ namespace SavingsPlatform.Common.Repositories.Marten
             var result = await _documentSession.LoadManyAsync<AggregateState<TData>>(keys);
             if (result is not null && result.Any())
             {
-                return result.Select(r => _mapper.Map(r)).ToList();
+                return result.Where(r => r is not null).Select(r => _mapper.Map(r)).ToList();
             }
 
             return Enumerable.Empty<TEntry>().ToList();

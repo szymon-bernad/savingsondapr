@@ -2,4 +2,4 @@
 
 namespace SavingsPlatform.Contracts.Accounts.Requests;
 
-public record CreateCurrentAccount(string ExternalRef, Currency AccountCurrency);
+public record CreateCurrentAccount(string ExternalRef, Currency AccountCurrency, string? UserId = null);

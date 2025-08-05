@@ -28,7 +28,7 @@ internal class AccountHolderMapper : IStateMapper<AggregateState<AccountHolderDt
             Key = state.Id,
             ExternalRef = state.ExternalRef,
             Username = state.Data!.Username,
-            AccountIds = state.Data!.AccountIds,
+            Accounts = [.. state.Data!.Accounts],
             HasUnpublishedEvents = state.HasUnpublishedEvents,
             UnpublishedEvents = unpubEvents
         };
@@ -43,7 +43,7 @@ internal class AccountHolderMapper : IStateMapper<AggregateState<AccountHolderDt
             Data = new AccountHolderDto(
                 dto.AddedOn ?? DateTime.UtcNow,
                 dto.Username,
-                dto.AccountIds),
+                dto.Accounts),
             HasUnpublishedEvents = dto.HasUnpublishedEvents,
             UnpublishedEventsJson = dto.UnpublishedEvents?.Any() ?? false ?
                 JsonSerializer.Serialize(Enumerable.Cast<object>(dto.UnpublishedEvents)) :

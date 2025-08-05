@@ -1,3 +1,5 @@
-﻿namespace SavingsPlatform.Contracts.Accounts.Requests;
+﻿using SavingsPlatform.Contracts.Accounts.Enums;
 
-public record CreateSavingsAccount(string ExternalRef, decimal InterestRate, string CurrentAccountRef);
+namespace SavingsPlatform.Contracts.Accounts.Requests;
+
+public record CreateSavingsAccount(string ExternalRef, decimal InterestRate, string CurrentAccountRef, Currency AccountCurrency, string UserId);

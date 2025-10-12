@@ -62,6 +62,7 @@ public class AccountsModule : ICarterModule
             return Results.Forbid();
         })
         .RequireAuthorization()
+        .Produces<IEnumerable<BaseAccountResponse>>(StatusCodes.Status200OK)
         .WithTags(["users-accounts"]);
 
         app.MapPost("/api/users/{userid}/:add-user-account",

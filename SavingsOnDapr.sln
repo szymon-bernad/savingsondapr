@@ -25,6 +25,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CurrencyExchange.Api.UnitTe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dashboard.Api", "Dashboard.Api\Dashboard.Api.csproj", "{8FB59FCB-DEF4-4F6B-AEE9-9AF82096FC09}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SavingsOnDapr.AppHost", "SavingsOnDapr.AppHost\SavingsOnDapr.AppHost.csproj", "{8342AC50-5E9B-46BE-AADD-BB27DA4810F1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SavingsOnDapr.ServiceDefaults", "SavingsOnDapr.ServiceDefaults\SavingsOnDapr.ServiceDefaults.csproj", "{DF0F1AFF-1EEC-1E27-E2B4-5B50A1EE609D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +75,14 @@ Global
 		{8FB59FCB-DEF4-4F6B-AEE9-9AF82096FC09}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8FB59FCB-DEF4-4F6B-AEE9-9AF82096FC09}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8FB59FCB-DEF4-4F6B-AEE9-9AF82096FC09}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8342AC50-5E9B-46BE-AADD-BB27DA4810F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8342AC50-5E9B-46BE-AADD-BB27DA4810F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8342AC50-5E9B-46BE-AADD-BB27DA4810F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8342AC50-5E9B-46BE-AADD-BB27DA4810F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF0F1AFF-1EEC-1E27-E2B4-5B50A1EE609D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF0F1AFF-1EEC-1E27-E2B4-5B50A1EE609D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF0F1AFF-1EEC-1E27-E2B4-5B50A1EE609D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF0F1AFF-1EEC-1E27-E2B4-5B50A1EE609D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -24,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SavingsOnDapr.ServiceDefaults\SavingsOnDapr.ServiceDefaults.csproj" />
     <ProjectReference Include="..\SavingsPlatform.Common\SavingsPlatform.Common.csproj" />
     <ProjectReference Include="..\SavingsPlatform.Contracts\SavingsPlatform.Contracts.csproj" />
   </ItemGroup>

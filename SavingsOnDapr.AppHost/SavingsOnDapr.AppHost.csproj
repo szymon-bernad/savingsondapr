@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Sdk Name="Aspire.AppHost.Sdk" Version="9.3.1" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>33cf0f08-ca43-401d-b260-c4079d5f6e55</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.3.1" />
+    <PackageReference Include="CommunityToolkit.Aspire.Hosting.Dapr" Version="9.7.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CurrencyExchange.Api\CurrencyExchange.Api.csproj" />
+    <ProjectReference Include="..\Dashboard.Api\Dashboard.Api.csproj" />
+    <ProjectReference Include="..\SavingsOnDapr.Api\SavingsOnDapr.Api.csproj" />
+    <ProjectReference Include="..\SavingsOnDapr.EventStore\SavingsOnDapr.EventStore.csproj" />
+  </ItemGroup>
+
+</Project>

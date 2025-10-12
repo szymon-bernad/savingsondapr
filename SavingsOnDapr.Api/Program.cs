@@ -21,6 +21,8 @@ using Weasel.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 builder.Configuration.AddEnvironmentVariables();
 
 var jsonOptions = new JsonSerializerOptions
@@ -29,8 +31,6 @@ var jsonOptions = new JsonSerializerOptions
 };
 jsonOptions.Converters.Add(new JsonStringEnumConverter());
 
-var daprHttpPort = Environment.GetEnvironmentVariable("DAPR_HTTP_PORT") ??
-                    throw new ApplicationException("DAPR_HTTP_PORT is not set as Env Var");
 builder.Services.AddDaprClient(dpr => { dpr.UseJsonSerializationOptions(jsonOptions); });
 
 builder.Services.AddSavingsAccounts(builder.Configuration);
@@ -91,6 +91,8 @@ builder.Services.AddMediatR(cfg =>
 });
 
 var app = builder.Build();
+
+app.MapDefaultEndpoints();
 
 app.UseCloudEvents();
 app.UseSwagger();

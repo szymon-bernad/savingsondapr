@@ -7,7 +7,7 @@ spec:
   version: v1
   metadata:
   - name: schedule
-    value: "0 */10 19-23 * * *"
+    value: "0 */10 * * * *"
   - name: direction
     value: "input"
   - name: route

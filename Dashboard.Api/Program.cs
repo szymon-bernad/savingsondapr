@@ -13,6 +13,8 @@ using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration);
 builder.Services.AddAuthorization();
 
@@ -60,6 +62,8 @@ builder.Logging.AddOpenTelemetry(x =>
         .AddAspNetCoreInstrumentation()
         .ConfigureResource(r => r.AddService("dashboard-api")));
 var app = builder.Build();
+
+app.MapDefaultEndpoints();
 
 app.UseCors(policy =>
 {

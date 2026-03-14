@@ -14,20 +14,12 @@ public class AccountsApiClient(
     private readonly AccountsApiConfig _config = cfgOptions.Value
             ?? throw new ArgumentNullException(nameof(cfgOptions));
     private readonly DaprClient _daprClient = daprClient;
+    private readonly HttpClient _httpClient = daprClient.CreateInvokableHttpClient();
     private readonly ILogger<AccountsApiClient> _logger = logger;
 
     public Task CreditAccountAsync(CreditAccount request)
-        => _daprClient.InvokeMethodAsync(
-                HttpMethod.Post,
-                _config.AccountsApiServiceName,
-                _config.CreditAccountEndpoint,
-                request);
-
+        => _httpClient.PostAsJsonAsync($"http://{_config.AccountsApiServiceName}/{_config.CreditAccountEndpoint}", request);
 
     public Task DebitAccountAsync(DebitAccount request)
-        => _daprClient.InvokeMethodAsync(
-            HttpMethod.Post,
-            _config.AccountsApiServiceName,
-            _config.DebitAccountEndpoint,
-            request);
+        => _httpClient.PostAsJsonAsync($"http://{_config.AccountsApiServiceName}/{_config.DebitAccountEndpoint}", request);
 }

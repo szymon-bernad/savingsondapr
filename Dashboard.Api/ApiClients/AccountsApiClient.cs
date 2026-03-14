@@ -15,29 +15,26 @@ public class AccountsApiClient(IOptions<AccountsApiConfig> config,
     private readonly AccountsApiConfig _config = config.Value
             ?? throw new ArgumentNullException(nameof(config));
     private readonly DaprClient _daprClient = daprClient;
+    private readonly HttpClient _httpClient = daprClient.CreateInvokableHttpClient();
 
-   public Task<AccountHolderResponse> GetAccountHolderDetailsAsync(string userId)
-        => _daprClient.InvokeMethodAsync<AccountHolderResponse>(
-                HttpMethod.Get,
-                _config.AccountsApiServiceName,
-                string.Format(_config.AccountHoldersEndpoint, userId));
+    public Task<AccountHolderResponse?> GetAccountHolderDetailsAsync(string userId)
+        => _httpClient.GetFromJsonAsync<AccountHolderResponse>($"http://{_config.AccountsApiServiceName}/{string.Format(_config.AccountHoldersEndpoint, userId)}");
+
 
     public async Task<ICollection<BaseAccountResponse>> GetAllUserAccountsAsync(string userId)
     {
-        var accHolderDetails = await _daprClient.InvokeMethodAsync<AccountHolderResponse>(
-                 HttpMethod.Get,
-                 _config.AccountsApiServiceName,
-                 string.Format(_config.AccountHoldersEndpoint, userId));
+        var accHolderDetails = await _httpClient.GetFromJsonAsync<AccountHolderResponse>($"http://{_config.AccountsApiServiceName}/{string.Format(_config.AccountHoldersEndpoint, userId)}");
 
         if (accHolderDetails is not null)
         {
-            var accounts = await _daprClient.InvokeMethodAsync<ICollection<string>, ICollection<BaseAccountResponse>>(
-                _config.AccountsApiServiceName,
-                _config.AccountsByIdsEndpoint,
-                [.. accHolderDetails.Accounts.Select(x => x.AccountId)]);
+            var response = await _httpClient.PostAsJsonAsync<ICollection<string>>($"http://{_config.AccountsApiServiceName}/{_config.AccountsByIdsEndpoint}", [.. accHolderDetails.Accounts.Select(x => x.AccountId)]);
+            response.EnsureSuccessStatusCode();
 
-            return accounts;
+            var accounts = await response.Content.ReadFromJsonAsync<ICollection<BaseAccountResponse>>();
+
+            return accounts ?? Enumerable.Empty<BaseAccountResponse>().ToList();
         }
+
         return Enumerable.Empty<BaseAccountResponse>().ToList();
     }
 
@@ -64,7 +61,7 @@ public class AccountsApiClient(IOptions<AccountsApiConfig> config,
                 HttpMethod.Post,
                 _config.AccountsApiServiceName,
                 _config.CreateCurrentAccountEndpoint,
-                null,
+                [],
                 new CreateCurrentAccount(request.ExternalRef, request.AccountCurrency, request.UserId));
         }
         else if (request.Type == AccountType.SavingsAccount)
@@ -75,17 +72,17 @@ public class AccountsApiClient(IOptions<AccountsApiConfig> config,
                 HttpMethod.Post,
                 _config.AccountsApiServiceName,
                 _config.CreateSavingsAccountEndpoint,
-                null,
+                [],
                 new CreateSavingsAccount(
                     request.ExternalRef,
-                    request.SavingsDetails.InterestRate,
-                    request.SavingsDetails.CurrentAccountRef, 
+                    request.SavingsDetails!.InterestRate,
+                    request.SavingsDetails!.CurrentAccountRef, 
                     request.AccountCurrency,
                     request.UserId));
         }
 
 
-        var result = await _daprClient.InvokeMethodWithResponseAsync(req);
+        var result = await _httpClient.SendAsync(req!);
 
         if (result.StatusCode != System.Net.HttpStatusCode.Accepted)
         {
@@ -94,11 +91,9 @@ public class AccountsApiClient(IOptions<AccountsApiConfig> config,
 
     }
 
-    public Task<CurrencyRateResponse> GetSavingsInterestRateAsync(Currency accountCurrency)
-       => _daprClient.InvokeMethodAsync<CurrencyRateResponse>(
-            HttpMethod.Get,
-            _config.AccountsApiServiceName,
-            string.Format(_config.SavingsCurrentRateEndpoint, accountCurrency.ToString()));
+    public Task<CurrencyRateResponse?> GetSavingsInterestRateAsync(Currency accountCurrency)
+        => _httpClient.GetFromJsonAsync<CurrencyRateResponse>($"http://{_config.AccountsApiServiceName}/{string.Format(_config.SavingsCurrentRateEndpoint, accountCurrency.ToString())}");
+
 
     private void ValidateRequestForSavings(CreateAccountRequest request)
     {

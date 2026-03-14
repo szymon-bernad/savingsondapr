@@ -1,4 +1,5 @@
-using AutoFixture.Xunit2;
+
+using AutoFixture.Xunit3;
 using CurrencyExchange.Api.Internal;
 using CurrencyExchange.Api.Internal.Activities;
 using Dapr.Workflow;

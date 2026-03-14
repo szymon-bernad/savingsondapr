@@ -7,13 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dapr.Actors.AspNetCore" Version="1.17.3" />
-    <PackageReference Include="Dapr.AspNetCore" Version="1.17.3" />
-    <PackageReference Include="Dapr.Client" Version="1.17.3" />
-    <PackageReference Include="Dapr.Workflow" Version="1.17.3" />
-    <PackageReference Include="Marten" Version="7.38.0" />
-    <PackageReference Include="MediatR" Version="12.4.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.3" />
+    <PackageReference Include="Dapr.Actors.AspNetCore" Version="1.17.4" />
+    <PackageReference Include="Dapr.AspNetCore" Version="1.17.4" />
+    <PackageReference Include="Dapr.Client" Version="1.17.4" />
+    <PackageReference Include="Dapr.Workflow" Version="1.17.4" />
+    <PackageReference Include="Marten" Version="8.24.0" />
+    <PackageReference Include="MediatR" Version="14.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.5" />
     <PackageReference Include="OpenTelemetry.Api" Version="1.15.0" />
   </ItemGroup>
 

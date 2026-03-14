@@ -7,13 +7,13 @@ services:
       - "9411:9411"  # allows us to access the web console
   
   placement:
-    image: "daprio/dapr:1.15.7-rc.2"
+    image: "daprio/dapr:1.17.1"
     command: ["./placement", "--port", "50000"]
     ports:
       - "50000:50000"
 
   scheduler:
-    image: "daprio/dapr:1.15.7-rc.2"
+    image: "daprio/dapr:1.17.1"
     command: ["./scheduler", "--port", "50007"]
     ports:
       - "50007:50007"
@@ -48,7 +48,7 @@ services:
       dockerfile: ./SavingsOnDapr.Api/Dockerfile
 
   savingsondapr.api-dapr:
-    image: "daprio/daprd:1.15.7-rc.2"
+    image: "daprio/daprd:1.17.1"
     network_mode: "service:savingsondapr.api"
     depends_on:
       savingsondapr.api:
@@ -62,7 +62,7 @@ services:
       dockerfile: ./CurrencyExchange.Api/Dockerfile
   
   currencyexchange.api-dapr:
-    image: "daprio/daprd:1.15.7-rc.2"
+    image: "daprio/daprd:1.17.1"
     network_mode: "service:currencyexchange.api"
     depends_on:
       currencyexchange.api:
@@ -76,7 +76,7 @@ services:
       dockerfile: ./SavingsOnDapr.EventStore/Dockerfile
 
   savingsondapr.eventstore-dapr:
-    image: "daprio/daprd:1.15.7-rc.2"
+    image: "daprio/daprd:1.17.1"
     network_mode: "service:savingsondapr.eventstore"
     depends_on:
       savingsondapr.eventstore:
@@ -90,7 +90,7 @@ services:
       dockerfile: ./Dashboard.Api/Dockerfile
 
   dashboard.api-dapr:
-    image: "daprio/daprd:1.15.7-rc.2"
+    image: "daprio/daprd:1.17.1"
     network_mode: "service:dashboard.api"
     depends_on:
       savingsondapr.api:

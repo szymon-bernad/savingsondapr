@@ -1,10 +1,10 @@
-﻿namespace SavingsOnDapr.EventStore.Store;
-
+﻿
 using Marten;
 using SavingsPlatform.Contracts.Accounts.Models;
 using ISavingsEvent = SavingsPlatform.Contracts.Accounts.Interfaces.IEvent;
 using IMartenEvent = Marten.Events.IEvent;
 
+namespace SavingsOnDapr.EventStore.Store;
 public abstract class EventStoreBase(IDocumentStore documentStore)
 {
     protected readonly IDocumentStore _documentStore = documentStore;

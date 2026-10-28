@@ -5,7 +5,7 @@ using SavingsPlatform.Contracts.Accounts.Enums;
 using SavingsPlatform.Contracts.Accounts.Requests;
 using SavingsPlatform.Contracts.CurrencyExchange.Response;
 using System.Text.Json;
-using static FastExpressionCompiler.ImTools.SmallMap4;
+
 
 namespace SavingsOnDapr.EventStore.Handlers;
 public class CurrencyExchangeSummaryRequestHandler(

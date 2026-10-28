@@ -1,6 +1,7 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Carter;
+using JasperFx;
 using Marten;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;

@@ -1,5 +1,7 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Carter;
+using JasperFx;
+using JasperFx.Events;
 using Marten;
 using Marten.Events;
 using OpenTelemetry.Resources;

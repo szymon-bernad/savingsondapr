@@ -1,7 +1,7 @@
 ﻿using Marten;
 using SavingsPlatform.Contracts.Accounts.Models;
 using ISavingsEvent = SavingsPlatform.Contracts.Accounts.Interfaces.IEvent;
-using IMartenEvent = Marten.Events.IEvent;
+using IMartenEvent = JasperFx.Events.IEvent;
 using System.Collections;
 using SavingsOnDapr.EventStore.Aggregations;
 

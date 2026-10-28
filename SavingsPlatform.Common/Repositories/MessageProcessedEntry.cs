@@ -1,4 +1,5 @@
-﻿using Marten.Schema;
+﻿using JasperFx;
+using Marten.Schema;
 
 namespace SavingsPlatform.Contracts.Accounts;
 

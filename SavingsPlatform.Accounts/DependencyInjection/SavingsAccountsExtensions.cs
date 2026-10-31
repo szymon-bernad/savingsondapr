@@ -30,7 +30,6 @@ public static class SavingsPlatformAccountsDIExt
             .AddScoped<IStateEntryQueryHandler<CurrentAccountState>, CurrentAccountRepository>()
             .AddTransient<IAggregateRootFactory<CurrentAccount, CurrentAccountState>, CurrentAccountFactory>()
             .AddScoped<IEventPublishingService, DaprEventPublishingService>()
-            .AddScoped<IEventStoreApiClient, EventStoreApiClient>()
             .AddSingleton<IThreadSynchronizer, ThreadSynchronizer>()
             .AddTransient<IStateMapper<AggregateState<AccountHolderDto>, AccountHolderState>, AccountHolderMapper>()
             .AddScoped<IStateEntryRepository<AccountHolderState>, AccountHolderRepository>()
@@ -42,6 +41,8 @@ public static class SavingsPlatformAccountsDIExt
                     options.Actors.RegisterActor<DepositTransferActor>();
                     options.Actors.RegisterActor<AccountCreationActor>();
                 });
+
+        services.AddHttpClient<IEventStoreApiClient, EventStoreApiClient>();
 
         services.Configure<EventStoreApiConfig>(config.GetSection("EventStoreApiConfig"));
         services.Configure<ServiceConfig>(config.GetSection("ServiceConfig"));

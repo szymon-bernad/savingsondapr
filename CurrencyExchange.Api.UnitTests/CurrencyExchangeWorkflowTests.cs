@@ -44,9 +44,9 @@ public class CurrencyExchangeWorkflowTests
             nameof(CreditAccountActivity),
             Arg.Is<CreditAccount>(c => beneficiaryExtRef.Equals(c.ExternalRef, StringComparison.Ordinal)));
 
-        await ctx.Received(1).WaitForExternalEventAsync<AccountDebited>("accountdebited");
+        await ctx.Received(1).WaitForExternalEventAsync<AccountDebited>("accountdebited", default(System.Threading.CancellationToken));
 
-        await ctx.Received(1).WaitForExternalEventAsync<AccountCredited>("accountcredited");
+        await ctx.Received(1).WaitForExternalEventAsync<AccountCredited>("accountcredited", default(System.Threading.CancellationToken));
     }
 
     [Theory]

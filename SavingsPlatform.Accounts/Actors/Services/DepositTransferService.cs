@@ -63,27 +63,33 @@ public class DepositTransferService(
             TransferType.CurrentToSavings => Task.Run(async () =>
             {
                 var instance = await iasaQueryHandler.GetAccountAsync(transferData.BeneficiaryAccountId);
-                await eventPublishingService.PublishCommand(
-                new CreditAccountCommand(
-                        $"{transferData.TransferId}-Credit",
-                    instance.ExternalRef,
-                    transferData.Amount,
-                    DateTime.UtcNow,
-                    AccountType.SavingsAccount,
-                    transferData.TransferId));
+                if (instance is not null)
+                {
+                    await eventPublishingService.PublishCommand(
+                        new CreditAccountCommand(
+                                $"{transferData.TransferId}-Credit",
+                            instance.ExternalRef,
+                            transferData.Amount,
+                            DateTime.UtcNow,
+                            AccountType.SavingsAccount,
+                            transferData.TransferId));
+                }
+
             }),
             TransferType.SavingsToCurrent => Task.Run(async () =>
             {
                 var instance = await currentAccountQueryHandler.GetAccountAsync(transferData.BeneficiaryAccountId);
-                await eventPublishingService.PublishCommand(
-                    new CreditAccountCommand(
-                        $"{transferData.TransferId}-Credit",
-                        instance.ExternalRef,
-                        transferData.Amount,
-                        DateTime.UtcNow,
-                        AccountType.CurrentAccount,
-                        transferData.TransferId));
-
+                if (instance is not null)
+                {
+                    await eventPublishingService.PublishCommand(
+                        new CreditAccountCommand(
+                            $"{transferData.TransferId}-Credit",
+                            instance.ExternalRef,
+                            transferData.Amount,
+                            DateTime.UtcNow,
+                            AccountType.CurrentAccount,
+                            transferData.TransferId));
+                }
             }),
             _ => throw new InvalidOperationException("Unsupported Transfer.")
         };

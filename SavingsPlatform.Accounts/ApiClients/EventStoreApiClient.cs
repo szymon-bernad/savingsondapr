@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using SavingsPlatform.Accounts.Current;
 using SavingsPlatform.Common.Config;
 using SavingsPlatform.Contracts.Accounts.Models;
+using System.Net.Http.Json;
 using System.Text;
 
 namespace SavingsPlatform.Accounts.ApiClients;
@@ -11,21 +12,31 @@ namespace SavingsPlatform.Accounts.ApiClients;
 public class EventStoreApiClient(
     IOptions<EventStoreApiConfig> cfgOptions,
     DaprClient daprClient,
+    HttpClient httpClient,
     ILogger<EventStoreApiClient> logger
     ) : IEventStoreApiClient
 {
-    private readonly EventStoreApiConfig _config = cfgOptions.Value 
+    private readonly EventStoreApiConfig _config = cfgOptions.Value
                 ?? throw new ArgumentNullException(nameof(cfgOptions));
     private readonly DaprClient _daprClient = daprClient;
+    private readonly HttpClient _httpClient = httpClient;
     private readonly ILogger<EventStoreApiClient> _logger = logger;
 
 
-    public Task<IDictionary<string, AccountBalanceRangeEntry>> GetBalancesForAccountHierarchyAsync(
-        string currentAccountId, DateTime? fromDate, DateTime? toDate) =>
-            _daprClient.InvokeMethodAsync<IDictionary<string, AccountBalanceRangeEntry>>(
+    public async Task<IDictionary<string, AccountBalanceRangeEntry>> GetBalancesForAccountHierarchyAsync(
+        string currentAccountId, DateTime? fromDate, DateTime? toDate)
+    {
+        var req = _daprClient.CreateInvokeMethodRequest(
                 HttpMethod.Get,
                 _config.EventStoreApiServiceName,
                 PrepareDateRangeQuery(currentAccountId, fromDate, toDate));
+
+        var response = await _httpClient.SendAsync(req);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<IDictionary<string, AccountBalanceRangeEntry>>()
+            ?? throw new InvalidOperationException("Failed to deserialize account balances response.");
+    }
 
     private string PrepareDateRangeQuery(string currentAccountId, DateTime? fromDate, DateTime? toDate)
     {

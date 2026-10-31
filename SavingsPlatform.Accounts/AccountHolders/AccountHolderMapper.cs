@@ -28,7 +28,7 @@ internal class AccountHolderMapper : IStateMapper<AggregateState<AccountHolderDt
             Key = state.Id,
             ExternalRef = state.ExternalRef,
             Username = state.Data!.Username,
-            Accounts = [.. state.Data!.Accounts],
+            Accounts = state.Data.Accounts is null ? [] : [.. state.Data!.Accounts],
             HasUnpublishedEvents = state.HasUnpublishedEvents,
             UnpublishedEvents = unpubEvents
         };

@@ -6,9 +6,9 @@ namespace CurrencyExchange.Api.Internal.Models
 {
     public class CurrencyExchangeFinalState
     {
-        public CurrencyExchangeOrder Order { get; init; }
+        public required CurrencyExchangeOrder Order { get; init; }
 
-        public ExchangeResult Result { get; init; }
+        public required ExchangeResult Result { get; init; }
 
     }
 }

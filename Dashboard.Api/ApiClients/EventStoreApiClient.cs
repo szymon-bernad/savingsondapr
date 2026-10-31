@@ -8,19 +8,25 @@ namespace Dashboard.Api.ApiClients;
 
 public class EventStoreApiClient(
     IOptions<EventStoreApiConfig> config,
-    DaprClient _daprClient,
-    ILogger<EventStoreApiClient> _logger) : IEventStoreApiClient
+    DaprClient daprClient,
+    HttpClient httpClient) : IEventStoreApiClient
 {
     private readonly EventStoreApiConfig _config = config.Value
             ?? throw new ArgumentNullException(nameof(config));
 
 
-    public Task InitiateCurrencyExchangeSummaryAsync(CurrencyExchangeSummaryRequest request)
-        => _daprClient.InvokeMethodAsync(
+    public async Task InitiateCurrencyExchangeSummaryAsync(CurrencyExchangeSummaryRequest request)
+    {
+        var req = daprClient.CreateInvokeMethodRequest<CurrencyExchangeSummaryRequest>(
                 HttpMethod.Post,
                 _config.EventStoreApiServiceName,
                 _config.InitCurrencyExchangeSummaryEndpoint,
+                [],
                 request);
+
+        var response = await httpClient.SendAsync(req);
+        response.EnsureSuccessStatusCode();
+    }
 
 
     public Task<CurrencyExchangeSummaryResponse> FetchCurrencyExchangeSummaryAsync(CurrencyExchangeSummaryRequest request)

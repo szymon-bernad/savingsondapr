@@ -93,7 +93,7 @@ public class ExchangeModule : ICarterModule
                         return Results.Accepted(
                             request.GetEncodedPathAndQuery());
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         await cache.RemoveAsync(summaryKey);
                     }

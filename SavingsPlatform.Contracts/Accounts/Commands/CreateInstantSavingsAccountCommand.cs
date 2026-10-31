@@ -6,6 +6,6 @@ public record CreateInstantSavingsAccountCommand(
     string MsgId,
     string ExternalRef,
     decimal InterestRate,
-    string CurrentAccountId,
+    string? CurrentAccountId,
     string UserId,
     Currency AccountCurrency = Currency.EUR) : ICommandRequest;

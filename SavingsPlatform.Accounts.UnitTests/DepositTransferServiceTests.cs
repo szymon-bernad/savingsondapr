@@ -44,7 +44,7 @@ public class DepositTransferServiceTests
         // Assert
         Assert.Null(result);
         await eventPublishingServiceMock.Received(1).PublishCommand(Arg.Any<DebitAccountCommand>());
-        await actorStateMngrMock.DidNotReceive().GetStateAsync<DepositTransferData>(DepositTransferService.DepositTransferState);
+        await actorStateMngrMock.DidNotReceive().GetStateAsync<DepositTransferData>(DepositTransferService.DepositTransferState, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public class DepositTransferServiceTests
         // Assert
         Assert.Equal(DepositTransferService.TransferAttemptUnregister, result);
         await eventPublishingServiceMock.DidNotReceive().PublishCommand(Arg.Any<DebitAccountCommand>());
-        await actorStateMngrMock.DidNotReceive().GetStateAsync<DepositTransferData>(DepositTransferService.DepositTransferState);
+        await actorStateMngrMock.DidNotReceive().GetStateAsync<DepositTransferData>(DepositTransferService.DepositTransferState, TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -109,7 +109,7 @@ public class DepositTransferServiceTests
         }
 
         await eventPublishingServiceMock.DidNotReceive().PublishCommand(Arg.Any<DebitAccountCommand>());
-        await actorStateMngrMock.DidNotReceive().GetStateAsync<DepositTransferData>(DepositTransferService.DepositTransferState);
+        await actorStateMngrMock.DidNotReceive().GetStateAsync<DepositTransferData>(DepositTransferService.DepositTransferState, TestContext.Current.CancellationToken);
     }
 
     private (IActorStateManager,

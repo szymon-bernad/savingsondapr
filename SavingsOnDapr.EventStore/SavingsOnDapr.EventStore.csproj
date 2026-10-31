@@ -13,8 +13,8 @@
     <PackageReference Include="Carter" Version="10.0.0" />
     <PackageReference Include="Dapr.AspNetCore" Version="1.19.0" />
     <PackageReference Include="Dapr.Client" Version="1.19.0" />
-    <PackageReference Include="Marten" Version="9.54.2" />
-    <PackageReference Include="Marten.AspNetCore" Version="9.54.2" />
+    <PackageReference Include="Marten" Version="9.56.0" />
+    <PackageReference Include="Marten.AspNetCore" Version="9.56.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.14" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.5" />
     <PackageReference Include="OpenTelemetry.Api" Version="1.20.1" />

@@ -33,8 +33,8 @@ builder.Services.Configure<EventStoreApiConfig>(builder.Configuration.GetSection
 
 builder.Services.AddScoped<IAccountsApiClient, AccountsApiClient>()
                 .AddScoped<IExchangeApiClient, ExchangeApiClient>()
-                .AddScoped<IEventPublishingService, DaprEventPublishingService>()
-                .AddScoped<IEventStoreApiClient, EventStoreApiClient>();
+                .AddScoped<IEventPublishingService, DaprEventPublishingService>();
+builder.Services.AddHttpClient<IEventStoreApiClient, EventStoreApiClient>();
 var svcConfig = builder.Configuration.GetSection("ServiceConfig").Get<ServiceConfig>();
 builder.Services.AddDaprClient(dpr => { dpr.UseJsonSerializationOptions(jsonOptions); });
 
